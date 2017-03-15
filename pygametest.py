@@ -17,6 +17,8 @@ pixAr = pygame.PixelArray(gameDisplay)
 pixAr[10][20] = green
 del pixAr #unlock surface
 
+
+
 pygame.draw.line(gameDisplay, blue, (100,200), (300,450),5)
 pygame.draw.rect(gameDisplay, red, (400,400,50,25))
 pygame.draw.circle(gameDisplay, white, (150,150), 75)
@@ -50,12 +52,12 @@ del randomarray
 print(randomsurface.get_alpha())
 gameDisplay.blit(randomsurface,(300,300))
 
-energy = pygame.image.load('energy2.png').convert()
+energy = pygame.image.load('arrow_right.png').convert()
 zoomenergy=pygame.transform.scale(energy,(cellsize,cellsize))
 zoomenergy_array=pygame.PixelArray(zoomenergy)
 print(zoomenergy_array)
 del zoomenergy_array
-zoomenergy.set_colorkey((15539236))
+zoomenergy.set_colorkey((16777215))
 gameDisplay.blit(zoomenergy,(400,300))
 
 pygame.display.update()
