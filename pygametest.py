@@ -50,7 +50,7 @@ del randomarray
 print(randomsurface.get_alpha())
 gameDisplay.blit(randomsurface,(300,300))
 
-energy = pygame.image.load('energy2.png').convert()
+energy = pygame.image.load('hole2.png').convert()
 zoomenergy=pygame.transform.scale(energy,(cellsize,cellsize))
 zoomenergy_array=pygame.PixelArray(zoomenergy)
 print(zoomenergy_array)
