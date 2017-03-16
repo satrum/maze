@@ -805,9 +805,29 @@ def upgrade_param():
 	print(upgrade_name+' upgraded')
 	initplayer()
 
-
+#write on screen text from help.txt and return to main_menu
 def helpscreen():
-	pass	
+	startoverimg=pygame.image.load('gameover1.jpg').convert()
+	zoomstartoverimg=pygame.transform.smoothscale(startoverimg,(display_x,display_y+info_height))
+	gameDisplay.blit(zoomstartoverimg,(0,0))
+	
+	#read help file to text array
+	text_array=[i[:-1] for i in open('help.txt',"r")]
+	print (text_array)
+	#display text array
+	myfont = pygame.font.SysFont(font_def,20)
+	for i in range(len(text_array)):
+		mytext = myfont.render(text_array[i], True, white)
+		gameDisplay.blit(mytext,(40,40+i*mytext.get_height()))
+	#wait to return to main menu
+	while True:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				quit()
+		display_button("Return",40,display_y-40,250,40,green,bright_green,main_menu)
+		pygame.display.update()
+		clock.tick(10)
 
 #menu before start gameloop
 def main_menu():

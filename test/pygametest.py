@@ -60,10 +60,20 @@ del zoomenergy_array
 zoomenergy.set_colorkey((16777215))
 gameDisplay.blit(zoomenergy,(400,300))
 
-pygame.display.update()
 
 print(pygame.font.get_default_font())
 print(pygame.font.get_fonts())
+
+#text print
+text_array=[i[:-2] for i in open('help.txt',"r")]
+print (text_array)
+
+myfont = pygame.font.SysFont('timesnewroman',20)
+for i in range(len(text_array)):
+	mytext = myfont.render(text_array[i], True, red)
+	gameDisplay.blit(mytext,(400,300+i*mytext.get_height()))
+
+pygame.display.update()
 
 # test 'a' get_pressed()
 clock = pygame.time.Clock()
