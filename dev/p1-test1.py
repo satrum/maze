@@ -917,6 +917,7 @@ def gameloop():
 	global enemy
 	global env_speed, maze_oxygen
 	global player_direction
+	global FLAG_SCANNER
 	act=['',0] #действие игрока текущее и длительность в тиках
 	#act['MOVE',10]
 	#act['MOVE BLOCK',15]
@@ -1060,6 +1061,8 @@ def gameloop():
 						print ('концентрация кислорода: ',concentration_oxygen)
 					if event.key == pygame.K_f:#on/off fog of war
 						FLAG_FOG=not(FLAG_FOG)
+					if event.key == pygame.K_m:#on/off minimap (scanner, radar)
+						FLAG_SCANNER=not(FLAG_SCANNER)
 					if event.key == pygame.K_p:#pause game
 						pausegame = True
 						print(pausegame)
