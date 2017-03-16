@@ -62,6 +62,9 @@ gameDisplay.blit(zoomenergy,(400,300))
 
 pygame.display.update()
 
+print(pygame.font.get_default_font())
+print(pygame.font.get_fonts())
+
 # test 'a' get_pressed()
 clock = pygame.time.Clock()
 act=['',0]

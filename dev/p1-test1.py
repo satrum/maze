@@ -27,6 +27,7 @@ display_y-=info_height #уменьшить размер игрового пол�
 cellsize=100 #size of cell
 zoomsize=[20,30,50,60,80,100] #разные размеры cellsize на разных режимах масштабирования, картинки образуют массивы с каждым размером
 display_wall_tick=0 #мерцание (пока не используется)
+font_def='timesnewroman'
 #deep=1 #deep of blocks
 #maze size:
 grid_x=75 #min=75
@@ -458,7 +459,7 @@ def displaymaze():
 							enemy_heal=int(enemy[enemy_index][6]*cellsize/enemy_type[enemy[enemy_index][5]][6]) #расчет процента здоровья врага
 							pygame.draw.line(gameDisplay, red, (x,y),(x+enemy_heal,y))
 						#display env oxygen
-						if maze_oxygen[j][i]>0:
+						if maze_oxygen[j][i]>0 and FLAG_SCANNER:
 							pygame.draw.line(gameDisplay, blue, (x,y+1),(x+int(maze_oxygen[j][i]*cellsize/concentration_oxygen),y+1))
 					else:
 						pygame.draw.rect(gameDisplay, black, (x,y,cellsize,cellsize)) #fog of war
@@ -498,7 +499,7 @@ def displayplayer():
 #display player info: GLOBAL mazenumber, player_oxygen, player_energy, display_y
 def displayinfo(): 
 	pygame.draw.rect(gameDisplay, white, (0,display_y,display_x,display_y)) #закрашивает и сканнер тоже
-	myfont = pygame.font.SysFont("comicsansms",10)
+	myfont = pygame.font.SysFont(font_def,10)
 	mytext = myfont.render('environment oxygen: '+str(maze_oxygen[player_y][player_x]),True,black)
 	gameDisplay.blit(mytext,(0,display_y))
 	mytext = myfont.render('maze number: '+str(mazenumber), True, black)
@@ -555,7 +556,7 @@ def display_button(msg,x,y,w,h,ic,ac,action=None):
 			action()
 	else:
 		pygame.draw.rect(gameDisplay, ic,(x,y,w,h))
-	smallText = pygame.font.SysFont("comicsansms",20)
+	smallText = pygame.font.SysFont(font_def,20)
 	textSurf, textRect = text_objects(msg, smallText)
 	textRect.center = ( (x+(w/2)), (y+(h/2)) )
 	gameDisplay.blit(textSurf, textRect)
@@ -576,8 +577,9 @@ def pause_game():
 				pygame.quit()
 				quit()
 		#gameDisplay.fill(white)
-		display_button("Continue",display_x//2-110,display_y//2,100,50,green,bright_green,unpause_game)
-		display_button("Quit",display_x//2,display_y//2,100,50,red,bright_red,quit_game)
+		display_button("Continue",display_x//2-75,display_y//2,150,50,green,bright_green,unpause_game)
+		#display_button("Start Game",display_x//2-75,display_y//2+60,150,50,green,bright_green,main_menu)
+		display_button("Quit",display_x//2-75,display_y//2+120,150,50,red,bright_red,quit_game)
 		pygame.display.update()
 		clock.tick(10)
 
@@ -673,7 +675,7 @@ def gameover():
 	gameoverimg=pygame.image.load('gameover1.jpg').convert()
 	zoomgameoverimg=pygame.transform.smoothscale(gameoverimg,(display_x,display_y+info_height))
 	gameDisplay.blit(zoomgameoverimg,(0,0))
-	myfont = pygame.font.SysFont("comicsansms",50)
+	myfont = pygame.font.SysFont(font_def,50)
 	mytext = myfont.render('GAME OVER', True, red)
 	gameDisplay.blit(mytext,((display_x-mytext.get_width())//2,display_y//2))
 	pygame.display.update()
@@ -685,7 +687,7 @@ def startover():
 	zoomstartoverimg=pygame.transform.smoothscale(startoverimg,(display_x,display_y+info_height))
 	gameDisplay.blit(zoomstartoverimg,(0,0))
 	pygame.display.update()
-	pygame.time.wait(1000)
+	pygame.time.wait(100)
 
 #load player from file in main menu, or from network
 def loadplayer():
@@ -720,6 +722,7 @@ def saveplayer():
 	open('saveplayer.txt','a').write(str(player_upgrades))
 	print('сохранил прогресс в файл')
 
+#screen with upgrades buttons and player parameters
 def upgradeplayer():
 	global upgrade_name
 	startoverimg=pygame.image.load('upgrade2.jpg').convert()
@@ -735,6 +738,7 @@ def upgradeplayer():
 		#pygame.draw.rect(gameDisplay, black, (50,50,250,400))
 		gameDisplay.blit(zoomstartoverimg,(0,0))
 		pygame.draw.rect(gameDisplay,black,(35,35,550,460))
+		pygame.draw.rect(gameDisplay,green,(35,35,550,460),1)
 		for event in pygame.event.get():
 			#print(event)
 			if event.type == pygame.QUIT:
@@ -767,7 +771,7 @@ def upgradeplayer():
 
 		display_button("Return",40,440,250,40,green,bright_green,main_menu)
 		
-		myfont = pygame.font.SysFont("comicsansms",20)
+		myfont = pygame.font.SysFont(font_def,20)
 		mytext = myfont.render('PLAYER ENERGY:    '+str(player_energy), True, white)
 		gameDisplay.blit(mytext,(300,45))
 		mytext = myfont.render('PLAYER OXYGEN:    '+str(player_oxygen), True, white)
@@ -792,6 +796,7 @@ def upgradeplayer():
 		clock.tick(10)
 	main_menu()
 
+#used in upgradeplayer() to upgrade player parameters and decrease expirience
 def upgrade_param():
 	global player_upgrades, player_expirience,upgrade_name
 	player_upgrades[upgrade_name]+=1 #увеличить уровень апргейда
@@ -799,17 +804,19 @@ def upgrade_param():
 	player_expirience-=upgrades['EXP'][player_upgrades[upgrade_name]] #вычесть опыт
 	print(upgrade_name+' upgraded')
 	initplayer()
-	
+
+
+def helpscreen():
+	pass	
 
 #menu before start gameloop
 def main_menu():
 	startover() #нарисовать картинку на весь экран
 	#нарисовать уровень лабиринта и количество опыта
-	myfont = pygame.font.SysFont("comicsansms",20)
+	myfont = pygame.font.SysFont(font_def,20)
 	mytext = myfont.render('MAZE LEVEL:'+str(mazenumber), True, white)
 	pygame.draw.rect(gameDisplay, black, ((display_x-mytext.get_width())//2-5,display_y//2-105,mytext.get_width()+10,55))
 	gameDisplay.blit(mytext,((display_x-mytext.get_width())//2,display_y//2-100))
-	myfont = pygame.font.SysFont("comicsansms",20)
 	mytext = myfont.render('EXPIRIENCE:'+str(player_expirience), True, white)
 	gameDisplay.blit(mytext,((display_x-mytext.get_width())//2,display_y//2-75))
 	pygame.display.update()
@@ -823,14 +830,14 @@ def main_menu():
 				quit()
 		#gameDisplay.fill(white)
 		if mazenumber>0:
-			display_button("Continue",display_x//2-75,display_y//2,150,50,green,bright_green,gameloop)
-			display_button("Save Player",display_x//2-75,display_y//2+180,150,50,green,bright_green,saveplayer)
-			display_button("Upgrade Player",display_x//2-75,display_y//2+240,150,50,green,bright_green,upgradeplayer)
+			display_button("Continue",display_x//2-75,display_y//2,150,50,green,bright_green,gameloop) #1
+			display_button("Save Player",display_x//2-75,display_y//2+180,150,50,green,bright_green,saveplayer) #4
+			display_button("Upgrade Player",display_x//2-75,display_y//2+240,150,50,green,bright_green,upgradeplayer) #5
 		if mazenumber==0:
-			display_button("Start Game",display_x//2-75,display_y//2,150,50,green,bright_green,gameloop)
-		display_button("Quit",display_x//2-75,display_y//2+60,150,50,red,bright_red,quit_game)
-		display_button("Load Player",display_x//2-75,display_y//2+120,150,50,green,bright_green,loadplayer)
-
+			display_button("Start Game",display_x//2-75,display_y//2,150,50,green,bright_green,gameloop) #1
+		display_button("Quit",display_x//2-75,display_y//2+60,150,50,red,bright_red,quit_game) #2
+		display_button("Load Player",display_x//2-75,display_y//2+120,150,50,green,bright_green,loadplayer) #3
+		display_button("Help",display_x//2-75,display_y//2+300,150,50,green,bright_green,helpscreen) #6
 		pygame.display.update()
 		clock.tick(10)
 
