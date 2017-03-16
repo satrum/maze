@@ -11,7 +11,7 @@ green = (0,255,0)
 blue = (0,0,255)
 
 gameDisplay = pygame.display.set_mode((800,600))
-gameDisplay.fill(red)
+gameDisplay.fill(black)
 
 pixAr = pygame.PixelArray(gameDisplay)
 pixAr[10][20] = green
