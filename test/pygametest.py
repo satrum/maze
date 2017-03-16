@@ -52,7 +52,7 @@ del randomarray
 print(randomsurface.get_alpha())
 gameDisplay.blit(randomsurface,(300,300))
 
-energy = pygame.image.load('arrow_right.png').convert()
+energy = pygame.image.load('bullet1.png').convert()
 zoomenergy=pygame.transform.scale(energy,(cellsize,cellsize))
 zoomenergy_array=pygame.PixelArray(zoomenergy)
 print(zoomenergy_array)
@@ -65,6 +65,7 @@ print(pygame.font.get_default_font())
 print(pygame.font.get_fonts())
 
 #text print
+'''
 text_array=[i[:-2] for i in open('help.txt',"r")]
 print (text_array)
 
@@ -72,7 +73,7 @@ myfont = pygame.font.SysFont('timesnewroman',20)
 for i in range(len(text_array)):
 	mytext = myfont.render(text_array[i], True, red)
 	gameDisplay.blit(mytext,(400,300+i*mytext.get_height()))
-
+'''
 pygame.display.update()
 
 # test 'a' get_pressed()
