@@ -54,6 +54,7 @@ gameDisplay.blit(randomsurface,(300,300))
 
 energy = pygame.image.load('bullet1.png').convert()
 zoomenergy=pygame.transform.scale(energy,(cellsize,cellsize))
+zoomenergy=pygame.transform.rotate(zoomenergy,90)
 zoomenergy_array=pygame.PixelArray(zoomenergy)
 print(zoomenergy_array)
 del zoomenergy_array

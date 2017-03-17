@@ -99,7 +99,7 @@ mazelevels=[
 [75, 45, 150 ,10,50, 300 ,60 ,0,8 ,0,0], #5 more enemie level 0
 [75, 75, 300 ,15,80, 200 ,90 ,1,8 ,0,0], #6 enemie level 1 75*75
 [75, 75, 200 ,15,80, 400 ,120,1,8 ,0,0], #7 more enemie level 1 75*75
-[101,101,500 ,0, 100,300 ,150,2,12,100,50],  #8 big level enemie level 1 101*101 holes and env_oxygen
+[101,101,500 ,0, 100,300 ,200,2,12,100,50],  #8 big level enemie level 1 101*101 holes and env_oxygen
 [201,201,2000,50,400,2000,300,3,20,0,0]  #9 very big level enemie level 1 201*201 (после этого апгрейды 2 уровня можно сделать)
 ]
 print(mazelevels)
@@ -115,12 +115,12 @@ env_speed={'OXYGEN':[50,0]} #шаги, через которые произой�
 #player:
 player_x=0
 player_y=1
-#массив для разных направлений игрока и врагов
+#массив для разных направлений игрока и врагов dx,dy,image_index
 directions={
-'RIGHT': [1 , 0],
-'LEFT' : [-1, 0],
-'UP'   : [0 ,-1],
-'DOWN' : [0 , 1]
+'RIGHT': [1 , 0, 0],
+'LEFT' : [-1, 0, 1],
+'UP'   : [0 ,-1, 2],
+'DOWN' : [0 , 1, 3]
 }
 player_direction='RIGHT' #направление взгляда игрока по умолчанию
 #player statistics:
@@ -169,7 +169,7 @@ print('upgraded player: ',player_energy, player_oxygen, player_heal, player_dama
 
 #fire:
 weapons=[
-	[0,0,1,5,20,50,100,'small gun','gun1.png','bullet1.png']
+	[0,0,1,3,10,100,100,'small gun','gun1.png','bullet1.png']
 ]
 #weapons:
 #		0 - типы вооружения (type(номер типа)
@@ -502,6 +502,17 @@ def displaymaze():
 							pygame.draw.line(gameDisplay, blue, (x,y+1),(x+int(maze_oxygen[j][i]*cellsize/concentration_oxygen),y+1))
 					else:
 						pygame.draw.rect(gameDisplay, black, (x,y,cellsize,cellsize)) #fog of war
+	#display bullets
+	for i in range(len(player_bullets)):
+		bullet_x=player_bullets[i][6]
+		bullet_y=player_bullets[i][7]
+		if maze_fog[bullet_y][bullet_x]==1 or FLAG_FOG:
+			x=cellsize*(bullet_x-center_x_temp+diff_x+display_x_temp//2)
+			y=cellsize*(bullet_y-center_y_temp+diff_y+display_y_temp//2)
+			#смещение:
+			bullet_direction=player_bullets[i][8]
+			bullet_percent=int((player_bullets[i][2]%player_bullets[i][1])/player_bullets[i][1]*cellsize)
+			gameDisplay.blit(zoombullet1[ directions[bullet_direction][2] ][image_index] ,(x+directions[bullet_direction][0]*bullet_percent,y+directions[bullet_direction][1]*bullet_percent))
 	if display_wall_tick>250: display_wall_tick=0
 
 #display player on maze: GLOBAL - cellsize, player_x, player_y, zoomplayer1
@@ -532,32 +543,33 @@ def displayplayer():
 		gameDisplay.blit(zoomarrow_up[image_index],(x,y))
 	elif player_direction=='DOWN':
 		gameDisplay.blit(zoomarrow_down[image_index],(x,y))
-	pygame.draw.line(gameDisplay,red,(x,y),(x+int(player_heal*cellsize/100),y)) #процент здоровья игрока
+	pygame.draw.line(gameDisplay,red,(x,y),(x+int(player_heal*cellsize/upgrades['HEALTH_MAX'][player_upgrades['HEALTH_MAX']]),y)) #процент здоровья игрока
 	#pygame.draw.rect(gameDisplay, green, (x,y,cellsize,cellsize)) #player need image 
 
 #display player info: GLOBAL mazenumber, player_oxygen, player_energy, display_y
 def displayinfo(): 
-	pygame.draw.rect(gameDisplay, white, (0,display_y,display_x,display_y)) #закрашивает и сканнер тоже
+	pygame.draw.rect(gameDisplay, white, (0,display_y,display_x,info_height)) #закрашивает и сканнер тоже
+	pygame.draw.rect(gameDisplay, blue, (2,display_y+2,display_x-4,info_height-5),2)
 	myfont = pygame.font.SysFont(font_def,20)
 	mytext = myfont.render('environment oxygen: '+str(maze_oxygen[player_y][player_x]),True,black)
-	gameDisplay.blit(mytext,(0,display_y))
+	gameDisplay.blit(mytext,(10,display_y))
 	mytext = myfont.render('maze number: '+str(mazenumber), True, black)
-	gameDisplay.blit(mytext,(0,display_y+20))
+	gameDisplay.blit(mytext,(10,display_y+20))
 	mytext = myfont.render('oxygen:'+str(int(player_oxygen))+' %', True, black)
-	gameDisplay.blit(mytext,(0,display_y+40))
+	gameDisplay.blit(mytext,(10,display_y+40))
 	mytext = myfont.render('energy:'+str(int(player_energy))+' %', True, black)
-	gameDisplay.blit(mytext,(0,display_y+60))
+	gameDisplay.blit(mytext,(10,display_y+60))
 	mytext = myfont.render('player x:'+str(player_x)+' player y:'+str(player_y)+' move:'+str(player_action['MOVE'])+' fog:'+str(player_action['FOG'])+' pick:'+str(player_action['PICK'])+' kill:'+str(player_action['KILL']), True, black)
-	gameDisplay.blit(mytext,(0,display_y+80))
+	gameDisplay.blit(mytext,(10,display_y+80))
 	expirience=player_action['PICK']*100+player_action['FOG']+player_action['MOVE']+player_action['KILL']*100+int(player_oxygen)+int(player_energy)+int(player_heal)
 	mytext = myfont.render('exp after level complete: '+str(expirience),True,black)
-	gameDisplay.blit(mytext,(0,display_y+100))
+	gameDisplay.blit(mytext,(10,display_y+100))
 	mytext = myfont.render('time passed: '+str(int(time.clock()-starttime)),True,black)
-	gameDisplay.blit(mytext,(0,display_y+120))
+	gameDisplay.blit(mytext,(10,display_y+120))
 	mytext = myfont.render('player exp: '+str(player_expirience),True,black)
-	gameDisplay.blit(mytext,(0,display_y+140))
+	gameDisplay.blit(mytext,(10,display_y+140))
 	mytext = myfont.render('player heal: '+str(player_heal),True,black)
-	gameDisplay.blit(mytext,(0,display_y+160))
+	gameDisplay.blit(mytext,(10,display_y+160))
 	mytext = myfont.render('player bullets: '+str(player_inventory[player_inventory[0]][2]),True,black)
 	gameDisplay.blit(mytext,(300,display_y+20))
 	mytext = myfont.render('player weapon: '+str(weapons[player_inventory[player_inventory[0]][1]][7]),True,black)
@@ -997,6 +1009,12 @@ arrow_left = pygame.image.load('arrow_left.png').convert()
 zoomarrow_left=[pygame.transform.scale(arrow_left,(size,size)) for size in zoomsize]
 arrow_right = pygame.image.load('arrow_right.png').convert()
 zoomarrow_right=[pygame.transform.scale(arrow_right,(size,size)) for size in zoomsize]
+bullet1=pygame.image.load('bullet1.png').convert()
+zoombullet1=[[],[],[],[]]
+zoombullet1[0]=[pygame.transform.scale(bullet1,(size,size)) for size in zoomsize]
+zoombullet1[1]=[pygame.transform.rotate(bullet_sized,180) for bullet_sized in zoombullet1[0]]
+zoombullet1[2]=[pygame.transform.rotate(bullet_sized,90) for bullet_sized in zoombullet1[0]]
+zoombullet1[3]=[pygame.transform.rotate(bullet_sized,-90) for bullet_sized in zoombullet1[0]]
 for i in range(len(zoomsize)): 
 	zoomenemy1[i].set_colorkey((0x000000))
 	zoomenemy2[i].set_colorkey((0x000000))
@@ -1010,11 +1028,13 @@ for i in range(len(zoomsize)):
 	zoomarrow_down[i].set_colorkey((16777215))
 	zoomarrow_left[i].set_colorkey((16777215))
 	zoomarrow_right[i].set_colorkey((16777215))
+	for j in range(len(zoombullet1)):
+		zoombullet1[j][i].set_colorkey((16777215))
 #zoomoxygen.set_alpha(128)
 player1_img = pygame.image.load('player2.png').convert()
 zoomplayer1=[pygame.transform.scale(player1_img,(size,size)) for size in zoomsize]
 for i in range(len(zoomsize)): zoomplayer1[i].set_colorkey((15539236))
-zoomscanner=pygame.Surface((100,100)) #заранее готовая черная картинка сканнера (потом перерисовать)
+zoomscanner=pygame.Surface((info_height,info_height)) #заранее готовая черная картинка сканнера (потом перерисовать)
 #zoomplayer1.set_alpha(128)
 #screen=pygame.image.load('screen2.png').convert()
 #zoomscreen=pygame.transform.smoothscale(screen,(display_x,display_y))
