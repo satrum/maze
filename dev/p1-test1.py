@@ -59,6 +59,7 @@ objects_hole=100
 # 5 - enemy
 # 6 - health +50%
 # 7 - hole (яма, дыра, засасывающая кислород)
+# 8 - bullets (small gun)
 #На карте появляются враги(монстры), которые перемещаются, у них есть скорость, уровень агрессии, урон, здоровье.
 objects_enemy=50
 enemy_maxlevel=0
@@ -99,8 +100,9 @@ mazelevels=[
 [75, 45, 150 ,10,50, 300 ,60 ,0,8 ,0,0], #5 more enemie level 0
 [75, 75, 300 ,15,80, 200 ,90 ,1,8 ,0,0], #6 enemie level 1 75*75
 [75, 75, 200 ,15,80, 400 ,120,1,8 ,0,0], #7 more enemie level 1 75*75
-[101,101,500 ,0, 100,300 ,200,2,12,100,50],  #8 big level enemie level 1 101*101 holes and env_oxygen
-[201,201,2000,50,400,2000,300,3,20,0,0]  #9 very big level enemie level 1 201*201 (после этого апгрейды 2 уровня можно сделать)
+[101,101,500 ,0, 100,300 ,200,2,12,100,20],  #8 big level enemie level 1 101*101 holes and env_oxygen
+[201,201,2000,40,200,2000,300,3,20,0,0],  #9 very big level enemie level 1 201*201 (после этого апгрейды 2 уровня можно сделать)
+[201,201,9999,10,200,2000,1000,3,10,100,20] #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
 ]
 print(mazelevels)
 #лабиринты задают параметры при увеличении mazenumber
@@ -110,7 +112,7 @@ print(mazelevels)
 #среды:
 maze_oxygen=[[]] #кислород, концентрация
 concentration_oxygen=100 #максимальная концентрация, используется для генерации в start_env(concentration)
-env_speed={'OXYGEN':[50,0]} #шаги, через которые произойдет изменение концентрации и распространение среды в next_env(env_maze), первое значение - константа, второе - шаг
+env_speed={'OXYGEN':[100,0]} #шаги, через которые произойдет изменение концентрации и распространение среды в next_env(env_maze), первое значение - константа, второе - шаг
 
 #player:
 player_x=0
@@ -169,7 +171,7 @@ print('upgraded player: ',player_energy, player_oxygen, player_heal, player_dama
 
 #fire:
 weapons=[
-	[0,0,1,3,10,100,100,'small gun','gun1.png','bullet1.png']
+	[0,0,1,5,10,50,100,'small gun','gun1.png','bullet1.png']
 ]
 #weapons:
 #		0 - типы вооружения (type(номер типа)
@@ -197,7 +199,7 @@ player_bullets=[]
 # пример: [0,weapons[0][3],0,weapons[0][5],player_x,player_y,player_x+direction[player_direction][0],player_y+direction[player_direction][1],player_direction,weapons[0][2]] - начало при выстреле
 player_inventory=[
 1,
-['WEAPON',0,100,0]
+['WEAPON',0,1000,0]
 ]
 # player inventory
 #	player_inventory[0] - текущий предмет
@@ -486,7 +488,7 @@ def displaymaze():
 							#pygame.draw.rect(gameDisplay, red, (x,y,cellsize,cellsize)) #hole
 							gameDisplay.blit(zoomhole[image_index],(x,y))
 						if maze_objects[j][i]==5:
-							enemy_index=[enemy.index(k) for k in enemy if k[0]==i and k[1]==j][0]#найти врага, cool!
+							enemy_index=[enemy.index(k) for k in enemy if k[0]==i and k[1]==j and k[8]==False][0]#найти врага, cool!
 							if enemy[enemy_index][5]==0:
 								gameDisplay.blit(zoomenemy1[image_index],(x,y))
 							if enemy[enemy_index][5]==1:
@@ -582,11 +584,13 @@ def displayscanner(scanner_mode,tick):
 		radarsize=grid_x//2
 		scannerimage=pygame.Surface((grid_x,grid_x))
 		scanner_pixarray = pygame.PixelArray(scannerimage)
+		colorx=255//concentration_oxygen
 		for i in range(player_x-radarsize,player_x+radarsize):
 			for j in range(player_y-radarsize,player_y+radarsize):
 				if i>=0 and i<grid_x and j>=0 and j<grid_y:
 					if scanner_mode=='OXYGEN' and concentration_oxygen>0 and (i-player_x)*(i-player_x)+(j-player_y)*(j-player_y)<radarsize**2:
-						color_oxygen=(0,0,int(255*maze_oxygen[j][i]/concentration_oxygen))
+						color_oxygen=(0,0,maze_oxygen[j][i]*colorx)#int(255*maze_oxygen[j][i]/concentration_oxygen))
+						print(concentration_oxygen,color_oxygen)
 						scanner_pixarray[i][j]=color_oxygen
 		#del scanner_pixarray
 		zoomscanner=pygame.transform.scale(scannerimage,(info_height,info_height))
@@ -1010,6 +1014,7 @@ zoomarrow_left=[pygame.transform.scale(arrow_left,(size,size)) for size in zooms
 arrow_right = pygame.image.load('arrow_right.png').convert()
 zoomarrow_right=[pygame.transform.scale(arrow_right,(size,size)) for size in zoomsize]
 bullet1=pygame.image.load('bullet1.png').convert()
+#bullet1=pygame.image.load('bullet2.png').convert()
 zoombullet1=[[],[],[],[]]
 zoombullet1[0]=[pygame.transform.scale(bullet1,(size,size)) for size in zoomsize]
 zoombullet1[1]=[pygame.transform.rotate(bullet_sized,180) for bullet_sized in zoombullet1[0]]
