@@ -76,6 +76,15 @@ for i in range(len(text_array)):
 '''
 pygame.display.update()
 
+a = ['a', 'b', 'c', 'd']
+length=len(a)
+for i in range(length-1,-1,-1):
+	print(i)
+	a.pop(i)
+print (a)
+
+
+
 # test 'a' get_pressed()
 clock = pygame.time.Clock()
 act=['',0]

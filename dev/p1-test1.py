@@ -22,7 +22,7 @@ bright_blue = (0,0,128)
 
 display_x=1500 #размер игрового поля по горизонтали
 display_y=1000 #размер игрового поля по вертикали
-info_height=100 #размер поля с инофрмацией по вертикали
+info_height=200 #размер поля с инофрмацией по вертикали
 display_y-=info_height #уменьшить размер игрового поля по вертикали на высоту поля с информацией
 cellsize=100 #size of cell
 zoomsize=[20,30,50,60,80,100] #разные размеры cellsize на разных режимах масштабирования, картинки образуют массивы с каждым размером
@@ -167,6 +167,44 @@ player_oxygen_time=upgrades['OXYGEN_TIME'][player_upgrades['OXYGEN_TIME']]
 player_oxygen_energy=upgrades['OXYGEN_ENERGY'][player_upgrades['OXYGEN_ENERGY']]
 print('upgraded player: ',player_energy, player_oxygen, player_heal, player_damage, fog_radius, player_speed, player_oxygen_time, player_oxygen_energy)
 
+#fire:
+weapons=[
+	[0,0,1,5,20,50,100,'small gun','gun1.png','bullet1.png']
+]
+#weapons:
+#		0 - типы вооружения (type(номер типа)
+#		1 - effect(0 - физический точечный, 1 - энергетический точечный, 2 - разрывной с радиусом поражения)
+#		2 - damage
+#		3 - speed(сколько тиков проходит через одно поле)
+#		4 - cooldown(сколько тиков минимум между выстрелами)
+#		5 - range(сколько тиков максимально в полете)
+#		6 - bullets (максимальное количество снарядов в оружии))
+#		7 - name
+#		8 - image name for gun
+#		9 - image name for bullet
+player_bullets=[]
+#player bullets:
+#	0 - тип вооружения
+#	1 - speed (from weapon speed)
+#	2 - tick (current tick)
+#	3 - range (from weapon range)
+#	4 - x_begin
+#	5 - y_begin
+#	6 - x_current
+#	7 - y_current
+#	8 - direction 'LEFT','RIGHT','UP','DOWN' 
+#	9 - damage (from weapon damage)
+# пример: [0,weapons[0][3],0,weapons[0][5],player_x,player_y,player_x+direction[player_direction][0],player_y+direction[player_direction][1],player_direction,weapons[0][2]] - начало при выстреле
+player_inventory=[
+1,
+['WEAPON',0,100,0]
+]
+# player inventory
+#	player_inventory[0] - текущий предмет
+#	0 - class 'WEAPON', 'KEY'
+#	1 - type in class, if 'WEAPON' weapons[0]
+#	2 - value, if 'WEAPON' - bullets количество пуль текущее, т.е. это small gun со 100 пулями
+#	3 - tick (current tick) - if 'WEAPON' max tick = weapons[0][4] cooldown , т.е. это значение растет за цикл, увеличиваясть до cooldown , после этого опять сбрасывается в 0 и можно снова выстрелить
 
 pygame.init()
 # to get the true full-screen size, do this BEFORE pygame.display.set_mode:
@@ -351,7 +389,7 @@ def next_env(env_maze): #таблица среды и имя среды
 
 #move enemies
 def enemy_move():
-	global enemy,maze_objects,player_heal
+	global enemy,maze_objects,player_heal,player_action
 	for i in range(len(enemy)): #для каждого врага расчет отдельно
 		enemy_x=enemy[i][0]
 		enemy_y=enemy[i][1]
@@ -373,11 +411,12 @@ def enemy_move():
 				enemy_y+=1
 			#print(enemy_x,enemy_y,enemy[i][0],enemy[i][1])
 			if enemy_x==player_x and enemy_y==player_y:
-				print('столкновение',enemy_x,enemy_y,player_x,player_y)
+				print('impact with player',enemy_x,enemy_y,player_x,player_y)
 				player_heal=player_heal-enemy[i][7] #урон от врага
 				enemy[i][6]=enemy[i][6]-player_damage #урон врагу
 				enemy[i][3]=enemy_speed #враг потратил ход act=speed
 				if enemy[i][6]<=0:
+					print('enemy destroyed by impact')
 					enemy[i][8]=True #враг считается убитым
 					maze_objects[enemy[i][1]][enemy[i][0]]=0 #враг удаляется из предметов
 					player_action['KILL']+=1 #увеличиваем статистику убийств
@@ -499,26 +538,30 @@ def displayplayer():
 #display player info: GLOBAL mazenumber, player_oxygen, player_energy, display_y
 def displayinfo(): 
 	pygame.draw.rect(gameDisplay, white, (0,display_y,display_x,display_y)) #закрашивает и сканнер тоже
-	myfont = pygame.font.SysFont(font_def,10)
+	myfont = pygame.font.SysFont(font_def,20)
 	mytext = myfont.render('environment oxygen: '+str(maze_oxygen[player_y][player_x]),True,black)
 	gameDisplay.blit(mytext,(0,display_y))
 	mytext = myfont.render('maze number: '+str(mazenumber), True, black)
-	gameDisplay.blit(mytext,(0,display_y+10))
-	mytext = myfont.render('oxygen:'+str(int(player_oxygen))+' %', True, black)
 	gameDisplay.blit(mytext,(0,display_y+20))
-	mytext = myfont.render('energy:'+str(int(player_energy))+' %', True, black)
-	gameDisplay.blit(mytext,(0,display_y+30))
-	mytext = myfont.render('player x:'+str(player_x)+' player y:'+str(player_y)+' move:'+str(player_action['MOVE'])+' fog:'+str(player_action['FOG'])+' pick:'+str(player_action['PICK'])+' kill:'+str(player_action['KILL']), True, black)
+	mytext = myfont.render('oxygen:'+str(int(player_oxygen))+' %', True, black)
 	gameDisplay.blit(mytext,(0,display_y+40))
+	mytext = myfont.render('energy:'+str(int(player_energy))+' %', True, black)
+	gameDisplay.blit(mytext,(0,display_y+60))
+	mytext = myfont.render('player x:'+str(player_x)+' player y:'+str(player_y)+' move:'+str(player_action['MOVE'])+' fog:'+str(player_action['FOG'])+' pick:'+str(player_action['PICK'])+' kill:'+str(player_action['KILL']), True, black)
+	gameDisplay.blit(mytext,(0,display_y+80))
 	expirience=player_action['PICK']*100+player_action['FOG']+player_action['MOVE']+player_action['KILL']*100+int(player_oxygen)+int(player_energy)+int(player_heal)
 	mytext = myfont.render('exp after level complete: '+str(expirience),True,black)
-	gameDisplay.blit(mytext,(0,display_y+50))
+	gameDisplay.blit(mytext,(0,display_y+100))
 	mytext = myfont.render('time passed: '+str(int(time.clock()-starttime)),True,black)
-	gameDisplay.blit(mytext,(0,display_y+60))
+	gameDisplay.blit(mytext,(0,display_y+120))
 	mytext = myfont.render('player exp: '+str(player_expirience),True,black)
-	gameDisplay.blit(mytext,(0,display_y+70))
+	gameDisplay.blit(mytext,(0,display_y+140))
 	mytext = myfont.render('player heal: '+str(player_heal),True,black)
-	gameDisplay.blit(mytext,(0,display_y+80))
+	gameDisplay.blit(mytext,(0,display_y+160))
+	mytext = myfont.render('player bullets: '+str(player_inventory[player_inventory[0]][2]),True,black)
+	gameDisplay.blit(mytext,(300,display_y+20))
+	mytext = myfont.render('player weapon: '+str(weapons[player_inventory[player_inventory[0]][1]][7]),True,black)
+	gameDisplay.blit(mytext,(300,display_y))
 
 #display scanner in radius of half of level size. In DEV 
 def displayscanner(scanner_mode,tick):
@@ -534,9 +577,9 @@ def displayscanner(scanner_mode,tick):
 						color_oxygen=(0,0,int(255*maze_oxygen[j][i]/concentration_oxygen))
 						scanner_pixarray[i][j]=color_oxygen
 		#del scanner_pixarray
-		zoomscanner=pygame.transform.scale(scannerimage,(100,100))
+		zoomscanner=pygame.transform.scale(scannerimage,(info_height,info_height))
 		#zoomscanner.set_colorkey(((0x000000)))
-	gameDisplay.blit(zoomscanner,(display_x-100,display_y))
+	gameDisplay.blit(zoomscanner,(display_x-info_height,display_y))
 	
 
 
@@ -861,6 +904,66 @@ def main_menu():
 		pygame.display.update()
 		clock.tick(10)
 
+#сделать выстрел, потратить пулю в оружии, создать пулю
+def weapon_fire():
+	global player_inventory, player_bullets
+	player_inventory[player_inventory[0]][2]-=1 #уменьшить число пуль на 1
+	print('bullets in weapon remain:'+str(player_inventory[player_inventory[0]][2]))
+	current_weapon=player_inventory[player_inventory[0]][1] #текущий тип оружия
+	print ('weapon fire: '+weapons[current_weapon][7]+'type: '+str(current_weapon))
+	new_bullet=[current_weapon,weapons[current_weapon][3],0,weapons[current_weapon][5],player_x,player_y,player_x+directions[player_direction][0],player_y+directions[player_direction][1],player_direction,weapons[current_weapon][2]]
+	player_bullets.append(new_bullet)
+	print(player_bullets)
+	#player bullets:
+	#	0 - тип вооружения
+	#	1 - speed (from weapon speed)
+	#	2 - tick (current tick)
+	#	3 - range (from weapon range)
+	#	4 - x_begin
+	#	5 - y_begin
+	#	6 - x_current
+	#	7 - y_current
+	#	8 - direction 'LEFT','RIGHT','UP','DOWN' 
+	#	9 - damage (from weapon damage)
+
+#пересчет такта полета всех пуль, просчет попаданий
+def bullets_fly(bullets):
+	global enemy,maze_objects,player_action
+	for i in range(len(bullets)): #счетчик пуль увеличить
+		bullets[i][2]+=1
+	length=len(bullets)
+	for i in range(length-1,-1,-1): #удалить пули больше range, в обратном порядке так как список уменьшается и может стать пустым
+		if bullets[i][2]==bullets[i][3]:
+			print('bullet range maximum')
+			bullets.pop(i)
+	for i in range(len(bullets)): #пересчет координат player_x+direction[0]*tick//speed
+		dx=directions[bullets[i][8]][0]
+		dy=directions[bullets[i][8]][1]
+		bullets[i][6]=bullets[i][4]+dx*(bullets[i][2]//bullets[i][1])
+		bullets[i][7]=bullets[i][5]+dy*(bullets[i][2]//bullets[i][1])
+	length=len(bullets)
+	for i in range(length-1,-1,-1):
+		x=bullets[i][6]
+		y=bullets[i][7]
+		if maze[y][x]==1 or maze_objects[y][x]==4:#если стена, или двигающийся блок
+			print('bullet in block')
+			bullets.pop(i)
+		elif maze_objects[y][x]==5: #если враг, нанести урон
+			print('bullet in enemy')
+			damage=bullets[i][9]
+			enemy_index=[enemy.index(j) for j in enemy if j[0]==x and j[1]==y][0]#найти индекс врага
+			enemy[enemy_index][6]=enemy[enemy_index][6]-damage #урон врагу пулей
+			if enemy[enemy_index][6]<=0: #проверка здоровья врага
+				print('enemy destroyed by fire')
+				enemy[enemy_index][8]=True #враг считается убитым
+				maze_objects[y][x]=0 #враг удаляется из предметов
+				player_action['KILL']+=1 #увеличиваем статистику убийств
+			bullets.pop(i)
+	#print(bullets)
+	return bullets
+
+
+
 #import and create pictures:
 wall=pygame.image.load('wall15.png').convert()
 zoomwall=[pygame.transform.smoothscale(wall,(size,size)) for size in zoomsize]
@@ -945,6 +1048,8 @@ def gameloop():
 	global env_speed, maze_oxygen
 	global player_direction
 	global FLAG_SCANNER
+	global player_inventory
+	global player_bullets
 	act=['',0] #действие игрока текущее и длительность в тиках
 	#act['MOVE',10]
 	#act['MOVE BLOCK',15]
@@ -1069,6 +1174,16 @@ def gameloop():
 						player_y+=1
 						maze_fog_update(player_x,player_y)
 						continue
+			if keypressed[pygame.K_RETURN] and player_inventory[player_inventory[0]][0]=='WEAPON': #если нажат предмет и предмет - оружие и tick=cooldown
+				#print('enter pressed')
+				current_weapon=player_inventory[player_inventory[0]][1] #тип оружия
+				if player_inventory[player_inventory[0]][3]==weapons[current_weapon][4]: #если достигло cooldown
+					player_inventory[player_inventory[0]][3]=0 #сбросить счетчик tick
+					if player_inventory[player_inventory[0]][2]>0:
+						print('fire')
+						weapon_fire() #сделать выстрел, потратить пулю в оружии, создать пулю
+					else: print('no bullets')
+
 
 		for event in pygame.event.get():
 			#print(event)
@@ -1160,6 +1275,8 @@ def gameloop():
 			maze_oxygen=start_env(concentration_oxygen) #generate oxygen
 			main_menu()
 		
+		#bullets fly cicle
+		player_bullets=bullets_fly(player_bullets)
 		#enemy move cicle
 		enemy_move()
 		
@@ -1191,6 +1308,13 @@ def gameloop():
 		if act[1]>0 and (act[0]=='MOVE' or act[0]=='MOVE BLOCK' or act[0]=='MOVE ON ENEMY'):
 			player_energy-=5.0/cooldown['TICK'] #1move=-1 energy
 		if act[1]>0:act[1]-=1
+
+		#пересчет cooldown on inventory (weapon fire)
+		if player_inventory[player_inventory[0]][0]=='WEAPON': #если текущий предмет - оружие
+			current_weapon=player_inventory[player_inventory[0]][1] #тип оружия
+			if player_inventory[player_inventory[0]][3]<weapons[current_weapon][4]: #если не достигло cooldown
+				player_inventory[player_inventory[0]][3]+=1 #увеличить счетчик на 1, растет до cooldown, сбрасывается в 0 когда происходит выстрел
+		#print(player_inventory[player_inventory[0]][3])
 		#ticker 1sec=50tick
 		clock.tick(cooldown['TICK'])
 
