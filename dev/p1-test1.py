@@ -26,6 +26,8 @@ info_height=200 #размер поля с инофрмацией по верти
 display_y-=info_height #уменьшить размер игрового поля по вертикали на высоту поля с информацией
 cellsize=100 #size of cell
 zoomsize=[20,30,50,60,80,100] #разные размеры cellsize на разных режимах масштабирования, картинки образуют массивы с каждым размером
+player_display_x=0 #позиция игрока на экране
+player_display_y=0 #позиция игрока на экране
 display_wall_tick=0 #мерцание (пока не используется)
 font_def='timesnewroman'
 #deep=1 #deep of blocks
@@ -92,7 +94,7 @@ print ('enemies max level: '+str(enemy_maxlevel))
 #print (len(enemy))
 mazenumber=0 #count of maze generation
 mazelevels=[
-[21, 21, 10  ,0, 3 , 0   ,0  ,0,0 ,0,0], #0 easy test level, +energy
+[21, 21, 30  ,0, 3 , 0   ,0  ,0,0 ,0,0], #0 easy test level, +energy
 [51, 45, 100 ,5 ,20, 0   ,0  ,0,0 ,0,0], #1 medium test level, +oxygen
 [75, 45, 200 ,10,40, 0   ,0  ,0,0 ,0,0], #2 medium level, energy+oxygen
 [75, 45, 100 ,10,40, 100 ,0  ,0,0 ,0,0], #3 moving blocks
@@ -117,14 +119,15 @@ env_speed={'OXYGEN':[100,0]} #шаги, через которые произой
 #player:
 player_x=0
 player_y=1
-#массив для разных направлений игрока и врагов dx,dy,image_index
+#массив для разных направлений игрока и врагов dx,dy,image_index for display maze
 directions={
 'RIGHT': [1 , 0, 0],
 'LEFT' : [-1, 0, 1],
 'UP'   : [0 ,-1, 2],
 'DOWN' : [0 , 1, 3]
 }
-player_direction='RIGHT' #направление взгляда игрока по умолчанию
+player_direction='RIGHT' #направление взгляда игрока по умолчанию, по нему идет стрельба или другое использование предметов, если не используется мышь. Мышь меняет позицию.
+player_last_move='RIGHT' #направление последнего движения, учитывается при прорисовке игрока если он двигался и act>0
 #player statistics:
 player_action={'MOVE':0,'FIRE':0,'FOG':0, 'PICK':0,'KILL':0} #player action counts. statistics
 print('player x:',player_x,' player y:',player_y,' move:',player_action['MOVE'])
@@ -363,8 +366,8 @@ def next_env(env_maze): #таблица среды и имя среды
 	env_change=[[0 for x in range(grid_x)] for y in range(grid_y)]
 	for x in range(1,grid_x-1):
 		for y in range(1,grid_y-1):
-			stream=env_maze[y][x]//4
-			if stream>0:
+			if env_maze[y][x]>3:
+				stream=env_maze[y][x]//4
 				if maze_objects[y][x-1]!=1 and maze_objects[y][x-1]!=4:
 					env_change[y][x-1]+=stream
 					env_maze[y][x]-=stream
@@ -434,7 +437,7 @@ def enemy_move():
 
 
 #display maze: GLOBAL - surfaces of images, cellsize, grid_x, grid_y, FLAG_FOG, maze, maze_objects
-def displaymaze():
+def displaymaze(activity):
 	global display_wall_tick
 	display_wall_tick+=1
 	#gameDisplay.blit(zoomscreen,(0,0)) #фоновая картинка, если нет проверки поля на 0
@@ -444,20 +447,33 @@ def displaymaze():
 	center_y_temp=player_y
 	diff_x=0
 	diff_y=0
-	if center_x_temp<display_x_temp//2: 
+	#расчет смещения при простом движении:
+	dx=0
+	dy=0
+	if activity[0]=='MOVE' and activity[1]>0:
+		dx=int(cellsize*activity[1]/cooldown['MOVE'])*directions[player_last_move][0]
+		dy=int(cellsize*activity[1]/cooldown['MOVE'])*directions[player_last_move][1]
+
+	if center_x_temp<display_x_temp//2+1: 
 		diff_x=center_x_temp-display_x_temp//2
-	if center_y_temp<display_y_temp//2: 
+		dx=0
+	if center_y_temp<display_y_temp//2+1: 
 		diff_y=center_y_temp-display_y_temp//2
-	if center_x_temp>(grid_x-display_x_temp//2):
+		dy=0
+	if center_x_temp+1>(grid_x-display_x_temp//2):
 		diff_x=center_x_temp+display_x_temp//2-grid_x
-	if center_y_temp>(grid_y-display_y_temp//2):
+		dx=0
+	if center_y_temp+1>(grid_y-display_y_temp//2):
 		diff_y=center_y_temp+display_y_temp//2-grid_y
+		dy=0
 	image_index=zoomsize.index(cellsize)
-	for i in range(center_x_temp-display_x_temp-diff_x,center_x_temp+display_x_temp-diff_x):
-		for j in range(center_y_temp-display_y_temp-diff_y,center_y_temp+display_y_temp-diff_y):
+	for i in range(center_x_temp-display_x_temp-diff_x-1,center_x_temp+display_x_temp-diff_x+1):
+		for j in range(center_y_temp-display_y_temp-diff_y-1,center_y_temp+display_y_temp-diff_y+1):
 			x=cellsize*(i-center_x_temp+diff_x+display_x_temp//2)#+display_x//2
 			y=cellsize*(j-center_y_temp+diff_y+display_y_temp//2)#+display_y//2
-			inscreen=x<0 or x>=display_x or y<0 or y>=display_y
+			x+=dx
+			y+=dy
+			inscreen=x+cellsize<0 or x>=display_x or y+cellsize<0 or y>=display_y
 			if not inscreen:
 				if i<0 or i>=grid_x or j<0 or j>=grid_y:
 					pygame.draw.rect(gameDisplay, black, (x,y,cellsize,cellsize))
@@ -518,23 +534,36 @@ def displaymaze():
 	if display_wall_tick>250: display_wall_tick=0
 
 #display player on maze: GLOBAL - cellsize, player_x, player_y, zoomplayer1
-def displayplayer():
+def displayplayer(activity):  # act in mainloop ['MOVE',cooldown tick]
 	display_x_temp=int(display_x/cellsize) #сколько клеток влезет по горизонтали
 	display_y_temp=int(display_y/cellsize) #сколько клеток влезет по вертикали
-	
+	dx=0
+	dy=0
+	#расчет смещения при простом движении:
+	if activity[0]=='MOVE' and activity[1]>0:
+		dx=int(cellsize*activity[1]/cooldown['MOVE'])*directions[player_last_move][0]
+		dy=int(cellsize*activity[1]/cooldown['MOVE'])*directions[player_last_move][1]
+
 	if player_x<display_x_temp//2:
 		x=cellsize*player_x
 	elif player_x>(grid_x-display_x_temp//2):
 		x=cellsize*(player_x-grid_x+display_x_temp//2)+cellsize*(display_x_temp//2)
-	else: x=cellsize*(display_x_temp//2)
+	else:
+		x=cellsize*(display_x_temp//2)
+		dx=0
 	
 	if player_y<display_y_temp//2:
 		y=cellsize*player_y
 	elif player_y>(grid_y-display_y_temp//2):
 		y=cellsize*(player_y-grid_y+display_y_temp//2)+cellsize*(display_y_temp//2)
-	else: y=cellsize*(display_y_temp//2)
+	else:
+		y=cellsize*(display_y_temp//2)
+		dy=0
 	#x=display_x//2 #cellsize*player_x
 	#y=display_y//2 #cellsize*player_y
+	#изображение игрока
+	x-=dx
+	y-=dy
 	image_index=zoomsize.index(cellsize)
 	gameDisplay.blit(zoomplayer1[image_index],(x,y))
 	if player_direction=='RIGHT':
@@ -547,6 +576,7 @@ def displayplayer():
 		gameDisplay.blit(zoomarrow_down[image_index],(x,y))
 	pygame.draw.line(gameDisplay,red,(x,y),(x+int(player_heal*cellsize/upgrades['HEALTH_MAX'][player_upgrades['HEALTH_MAX']]),y)) #процент здоровья игрока
 	#pygame.draw.rect(gameDisplay, green, (x,y,cellsize,cellsize)) #player need image 
+	return x,y
 
 #display player info: GLOBAL mazenumber, player_oxygen, player_energy, display_y
 def displayinfo(): 
@@ -590,7 +620,7 @@ def displayscanner(scanner_mode,tick):
 				if i>=0 and i<grid_x and j>=0 and j<grid_y:
 					if scanner_mode=='OXYGEN' and concentration_oxygen>0 and (i-player_x)*(i-player_x)+(j-player_y)*(j-player_y)<radarsize**2:
 						color_oxygen=(0,0,maze_oxygen[j][i]*colorx)#int(255*maze_oxygen[j][i]/concentration_oxygen))
-						print(concentration_oxygen,color_oxygen)
+						#print(concentration_oxygen,color_oxygen)
 						scanner_pixarray[i][j]=color_oxygen
 		#del scanner_pixarray
 		zoomscanner=pygame.transform.scale(scannerimage,(info_height,info_height))
@@ -1071,10 +1101,11 @@ def gameloop():
 	global cellsize
 	global enemy
 	global env_speed, maze_oxygen
-	global player_direction
+	global player_direction, player_last_move
 	global FLAG_SCANNER
 	global player_inventory
 	global player_bullets
+	global player_display_x, player_display_y
 	act=['',0] #действие игрока текущее и длительность в тиках
 	#act['MOVE',10]
 	#act['MOVE BLOCK',15]
@@ -1086,13 +1117,14 @@ def gameloop():
 			#test RIGHT MOVE
 			if (keypressed[pygame.K_RIGHT] or keypressed[pygame.K_d]) and act[1]==0:
 				player_direction='RIGHT'
+				player_last_move='RIGHT'
 				if maze[player_y][player_x+1]==0 and maze_objects[player_y][player_x+1]!=4 and maze_objects[player_y][player_x+1]!=5 and maze_objects[player_y][player_x+1]!=7:#пустое поле справа и не move block и не враг и не яма(hole)
 					act=['MOVE',cooldown['MOVE']-player_speed]
 					player_action['MOVE']+=1
 					player_x+=1
 					maze_fog_update(player_x,player_y)
-					continue
-				if maze_objects[player_y][player_x+1]==5:#справа враг
+					#continue
+				elif maze_objects[player_y][player_x+1]==5:#справа враг
 					act=['MOVE ON ENEMY',cooldown['MOVE ON ENEMY']-player_speed]
 					enemy_index=[enemy.index(i) for i in enemy if i[0]==player_x+1 and i[1]==player_y][0]#найти индекс врага
 					print('нападение на врага')
@@ -1102,8 +1134,8 @@ def gameloop():
 						enemy[enemy_index][8]=True #враг считается убитым
 						maze_objects[player_y][player_x+1]=0 #враг удаляется из предметов
 						player_action['KILL']+=1 #увеличиваем статистику убийств
-					continue
-				if player_x<grid_x-2: #справа есть 2 поля
+					#continue
+				elif player_x<grid_x-2: #справа есть 2 поля
 					if maze_objects[player_y][player_x+1]==4 and maze_objects[player_y][player_x+2]==0 and maze[player_y][player_x+2]==0: #справа move block и за ним нет предметов и пустое поле
 						maze_objects[player_y][player_x+1]=0
 						maze_objects[player_y][player_x+2]=4
@@ -1111,17 +1143,18 @@ def gameloop():
 						player_action['MOVE']+=1
 						player_x+=1
 						maze_fog_update(player_x,player_y)
-						continue
+						#continue
 			#test LEFT MOVE
 			if (keypressed[pygame.K_LEFT] or keypressed[pygame.K_a]) and act[1]==0:
 				player_direction='LEFT'
+				player_last_move='LEFT'
 				if maze[player_y][player_x-1]==0 and maze_objects[player_y][player_x-1]!=4 and maze_objects[player_y][player_x-1]!=5 and maze_objects[player_y][player_x-1]!=7:
 					act=['MOVE',cooldown['MOVE']-player_speed]
 					player_action['MOVE']+=1
 					player_x-=1
 					maze_fog_update(player_x,player_y)
-					continue
-				if maze_objects[player_y][player_x-1]==5:#справа враг
+					#continue
+				elif maze_objects[player_y][player_x-1]==5:#справа враг
 					act=['MOVE ON ENEMY',cooldown['MOVE ON ENEMY']-player_speed]
 					enemy_index=[enemy.index(i) for i in enemy if i[0]==player_x-1 and i[1]==player_y][0]#найти врага
 					print('нападение на врага')
@@ -1131,8 +1164,8 @@ def gameloop():
 						enemy[enemy_index][8]=True #враг считается убитым
 						maze_objects[player_y][player_x-1]=0 #враг удаляется из предметов
 						player_action['KILL']+=1 #увеличиваем статистику убийств
-					continue
-				if player_x>2:
+					#continue
+				elif player_x>2:
 					if maze_objects[player_y][player_x-1]==4 and maze_objects[player_y][player_x-2]==0 and maze[player_y][player_x-2]==0:
 						maze_objects[player_y][player_x-1]=0
 						maze_objects[player_y][player_x-2]=4
@@ -1140,17 +1173,18 @@ def gameloop():
 						player_action['MOVE']+=1
 						player_x-=1
 						maze_fog_update(player_x,player_y)
-						continue
+						#continue
 			#test UP MOVE
 			if (keypressed[pygame.K_UP] or keypressed[pygame.K_w]) and act[1]==0:
 				player_direction='UP'
+				player_last_move='UP'
 				if maze[player_y-1][player_x]==0 and maze_objects[player_y-1][player_x]!=4 and maze_objects[player_y-1][player_x]!=5 and maze_objects[player_y-1][player_x]!=7:
 					act=['MOVE',cooldown['MOVE']-player_speed]
 					player_action['MOVE']+=1
 					player_y-=1
 					maze_fog_update(player_x,player_y)
-					continue
-				if maze_objects[player_y-1][player_x]==5:#справа враг
+					#continue
+				elif maze_objects[player_y-1][player_x]==5:#справа враг
 					act=['MOVE ON ENEMY',cooldown['MOVE ON ENEMY']-player_speed]
 					enemy_index=[enemy.index(i) for i in enemy if i[0]==player_x and i[1]==player_y-1][0]#найти врага
 					print('нападение на врага')
@@ -1160,8 +1194,8 @@ def gameloop():
 						enemy[enemy_index][8]=True #враг считается убитым
 						maze_objects[player_y-1][player_x]=0 #враг удаляется из предметов
 						player_action['KILL']+=1 #увеличиваем статистику убийств
-					continue
-				if player_y>2:
+					#continue
+				elif player_y>2:
 					if maze_objects[player_y-1][player_x]==4 and maze_objects[player_y-2][player_x]==0 and maze[player_y-2][player_x]==0:
 						maze_objects[player_y-1][player_x]=0
 						maze_objects[player_y-2][player_x]=4
@@ -1169,17 +1203,18 @@ def gameloop():
 						player_action['MOVE']+=1
 						player_y-=1
 						maze_fog_update(player_x,player_y)
-						continue
+						#continue
 			#test DOWN MOVE
 			if (keypressed[pygame.K_DOWN] or keypressed[pygame.K_s]) and act[1]==0:
 				player_direction='DOWN'
+				player_last_move='DOWN'
 				if maze[player_y+1][player_x]==0 and maze_objects[player_y+1][player_x]!=4 and maze_objects[player_y+1][player_x]!=5 and maze_objects[player_y+1][player_x]!=7:
 					act=['MOVE',cooldown['MOVE']-player_speed]
 					player_action['MOVE']+=1
 					player_y+=1
 					maze_fog_update(player_x,player_y)
-					continue
-				if maze_objects[player_y+1][player_x]==5:#справа враг
+					#continue
+				elif maze_objects[player_y+1][player_x]==5:#справа враг
 					act=['MOVE ON ENEMY',cooldown['MOVE ON ENEMY']-player_speed]
 					enemy_index=[enemy.index(i) for i in enemy if i[0]==player_x and i[1]==player_y+1][0]#найти врага
 					print('нападение на врага')
@@ -1189,8 +1224,8 @@ def gameloop():
 						enemy[enemy_index][8]=True #враг считается убитым
 						maze_objects[player_y+1][player_x]=0 #враг удаляется из предметов
 						player_action['KILL']+=1 #увеличиваем статистику убийств
-					continue
-				if player_y<grid_y-2:
+					#continue
+				elif player_y<grid_y-2:
 					if maze_objects[player_y+1][player_x]==4 and maze_objects[player_y+2][player_x]==0 and maze[player_y+2][player_x]==0:
 						maze_objects[player_y+1][player_x]=0
 						maze_objects[player_y+2][player_x]=4
@@ -1198,8 +1233,8 @@ def gameloop():
 						player_action['MOVE']+=1
 						player_y+=1
 						maze_fog_update(player_x,player_y)
-						continue
-			if keypressed[pygame.K_RETURN] and player_inventory[player_inventory[0]][0]=='WEAPON': #если нажат предмет и предмет - оружие и tick=cooldown
+						#continue
+			if keypressed[pygame.K_RETURN] and player_inventory[player_inventory[0]][0]=='WEAPON': #если нажат предмет и предмет - оружие 
 				#print('enter pressed')
 				current_weapon=player_inventory[player_inventory[0]][1] #тип оружия
 				if player_inventory[player_inventory[0]][3]==weapons[current_weapon][4]: #если достигло cooldown
@@ -1209,6 +1244,30 @@ def gameloop():
 						weapon_fire() #сделать выстрел, потратить пулю в оружии, создать пулю
 					else: print('no bullets')
 
+		if pygame.mouse.get_pressed()[0]==1 and player_inventory[player_inventory[0]][0]=='WEAPON': #если нажата левая кнопка мышки и предмет - оружие 
+			#print ('x: ',pygame.mouse.get_pos()[0],'y: ',pygame.mouse.get_pos()[1],'player x: ',player_display_x,'player y: ',player_display_y)
+			pos_x=pygame.mouse.get_pos()[0]
+			pos_y=pygame.mouse.get_pos()[1]
+			pos_dx=pos_x-player_display_x
+			pos_dy=pos_y-player_display_y
+			print(pos_dx,pos_dy)
+			#расчет направления, пока только 4
+			if pos_dx>0 and pos_dy>0 and pos_dx>pos_dy: player_direction='RIGHT'
+			if pos_dx>0 and pos_dy>0 and pos_dx<pos_dy: player_direction='DOWN'
+			if pos_dx>0 and pos_dy<0 and pos_dx>abs(pos_dy): player_direction='RIGHT'
+			if pos_dx>0 and pos_dy<0 and pos_dx<abs(pos_dy): player_direction='UP'
+			if pos_dx<0 and pos_dy<0 and abs(pos_dx)>abs(pos_dy): player_direction='LEFT'
+			if pos_dx<0 and pos_dy<0 and abs(pos_dx)<abs(pos_dy): player_direction='UP'
+			if pos_dx<0 and pos_dy>0 and abs(pos_dx)>pos_dy: player_direction='LEFT'
+			if pos_dx<0 and pos_dy>0 and abs(pos_dx)<pos_dy: player_direction='DOWN'
+			#fire:
+			current_weapon=player_inventory[player_inventory[0]][1] #тип оружия
+			if player_inventory[player_inventory[0]][3]==weapons[current_weapon][4]: #если достигло cooldown
+				player_inventory[player_inventory[0]][3]=0 #сбросить счетчик tick
+				if player_inventory[player_inventory[0]][2]>0:
+					print('fire')
+					weapon_fire() #сделать выстрел, потратить пулю в оружии, создать пулю
+				else: print('no bullets')
 
 		for event in pygame.event.get():
 			#print(event)
@@ -1248,8 +1307,8 @@ def gameloop():
 							cellsize=zoomsize[zoomindex+1]
 					
 		#gameDisplay.fill(white) #fill display - убрал, так как в displayinfo() заливается нижняя часть белым цветом
-		displaymaze() #display maze
-		displayplayer() #display player on maze
+		displaymaze(act) #display maze
+		player_display_x,player_display_y=displayplayer(act) #display player on maze and get display position of player
 		displayinfo() #display player info
 		if FLAG_SCANNER and concentration_oxygen>0: displayscanner('OXYGEN',env_speed['OXYGEN'][1]) #display scanner in bottom info place. Только если сканер включен, кислород есть и использовать TICK пересчета
 

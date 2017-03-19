@@ -84,7 +84,7 @@ for i in range(length-1,-1,-1):
 	a.pop(i)
 print (a)
 
-
+print (abs(-1))
 
 # test 'a' get_pressed()
 clock = pygame.time.Clock()
@@ -98,6 +98,8 @@ while True:
 		if key[pygame.K_a]:
 			print('left move')
 			act=['MOVE',10]
+	if pygame.mouse.get_pressed()[0]==1:
+		print (pygame.mouse.get_pos())
 	for event in pygame.event.get():
 		#print(event)
 		if event.type == pygame.QUIT:
