@@ -53,6 +53,7 @@ objects_energy=50
 objects_movingblock=100
 objects_health=5
 objects_hole=100
+objects_ammo=0 #ammo for 50 bullets
 # 0 - no objects
 # 1 - block
 # 2 - energy +50%
@@ -94,22 +95,33 @@ print ('enemies max level: '+str(enemy_maxlevel))
 #print (len(enemy))
 mazenumber=0 #count of maze generation
 mazelevels=[
-[21, 21, 30  ,0, 3 , 0   ,0  ,0,0 ,0,0], #0 easy test level, +energy
-[51, 45, 100 ,5 ,20, 0   ,0  ,0,0 ,0,0], #1 medium test level, +oxygen
-[75, 45, 200 ,10,40, 0   ,0  ,0,0 ,0,0], #2 medium level, energy+oxygen
-[75, 45, 100 ,10,40, 100 ,0  ,0,0 ,0,0], #3 moving blocks
-[75, 45, 200 ,10,50, 150 ,30 ,0,2 ,0,0], #4 enemie level 0
-[75, 45, 150 ,10,50, 300 ,60 ,0,8 ,0,0], #5 more enemie level 0
-[75, 75, 300 ,15,80, 200 ,90 ,1,8 ,0,0], #6 enemie level 1 75*75
-[75, 75, 200 ,15,80, 400 ,120,1,8 ,0,0], #7 more enemie level 1 75*75
-[101,101,500 ,0, 100,300 ,200,2,12,100,20],  #8 big level enemie level 1 101*101 holes and env_oxygen
-[201,201,2000,40,200,2000,300,3,20,0,0],  #9 very big level enemie level 1 201*201 (после этого апгрейды 2 уровня можно сделать)
-[201,201,9999,10,400,2000,1000,3,10,100,20] #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
+[21, 21, 30  ,0, 3 , 0   ,0   ,0,0 ,0  ,0 ,0 ], #0 easy test level, +energy
+[51, 45, 100 ,5 ,20, 0   ,0   ,0,0 ,0  ,0 ,0 ], #1 medium test level, +oxygen
+[75, 45, 200 ,10,4 , 0   ,0   ,0,0 ,0  ,0 ,0 ], #2 medium level, energy+oxygen
+[75, 45, 100 ,10,40, 100 ,0   ,0,0 ,0  ,0 ,0 ], #3 moving blocks
+[75, 45, 200 ,10,50, 150 ,30  ,0,2 ,0  ,0 ,2 ], #4 enemie level 0
+[75, 45, 150 ,10,50, 300 ,60  ,0,8 ,0  ,0 ,4 ], #5 more enemie level 0
+[75, 75, 300 ,15,80, 200 ,90  ,1,8 ,0  ,0 ,8 ], #6 enemie level 1 75*75
+[75, 75, 200 ,15,80, 400 ,120 ,1,8 ,0  ,0 ,8 ], #7 more enemie level 1 75*75
+[101,101,500 ,0, 100,300 ,200 ,2,12,100,20,16],  #8 big level enemie level 2 101*101 holes and env_oxygen
+[201,201,2000,40,300,2000,300 ,3,20,0  ,0 ,40],  #9 very big level enemie level 3 201*201 (после этого апгрейды 2 уровня можно сделать)
+[201,201,9999,10,400,2000,1000,3,10,100,20,30]  #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
 ]
 print(mazelevels)
 #лабиринты задают параметры при увеличении mazenumber
-#grid_x,grid_y,maze_randomcicles,objects_oxygen,objects_energy,objects_movingblock,objects_enemy,enemy_maxlevel,objects_health,objects_hole,concentration_oxygen
-#пока нет, но надо:  oxygen env flag on/off (просчитывать ли вообще кислород или он в нуле), oxygen generator
+#0 - grid_x
+#1 - grid_y
+#2 - maze_randomcicles
+#3 - objects_oxygen
+#4 - objects_energ
+#5 - objects_movingblock
+#6 - objects_enemy
+#7 - enemy_maxlevel
+#8 - objects_health
+#9 - objects_hole
+#10 - concentration_oxygen
+#11 - objects_ammo (small gun 50 bullets)
+#пока нет, но надо:  oxygen env flag on/off (просчитывать ли вообще кислород или он в нуле), oxygen generator, bullet(small gun)
 
 #среды:
 maze_oxygen=[[]] #кислород, концентрация
@@ -174,10 +186,10 @@ print('upgraded player: ',player_energy, player_oxygen, player_heal, player_dama
 
 #fire:
 weapons=[
-	[0,0,1,5,10,50,100,'small gun','gun1.png','bullet1.png']
+	[0,0,1,5,10,50,200,'small gun','gun1.png','bullet1.png']
 ]
 #weapons:
-#		0 - типы вооружения (type(номер типа)
+#		0 - типы вооружения (type(номер типа) = index in list
 #		1 - effect(0 - физический точечный, 1 - энергетический точечный, 2 - разрывной с радиусом поражения)
 #		2 - damage
 #		3 - speed(сколько тиков проходит через одно поле)
@@ -202,7 +214,7 @@ player_bullets=[]
 # пример: [0,weapons[0][3],0,weapons[0][5],player_x,player_y,player_x+direction[player_direction][0],player_y+direction[player_direction][1],player_direction,weapons[0][2]] - начало при выстреле
 player_inventory=[
 1,
-['WEAPON',0,1000,0]
+['WEAPON',0,0,0]
 ]
 # player inventory
 #	player_inventory[0] - текущий предмет
@@ -307,6 +319,13 @@ def startobjects():
 		y=random.randrange(int((grid_y-1)/2))
 		if objectsmaze[y*2+1][x*2+2]==0:
 			objectsmaze[y*2+1][x*2+2]=6
+			count-=1
+	count=objects_ammo #в коридорах
+	while count>0:
+		x=random.randrange(int((grid_x-1)/2)-1)
+		y=random.randrange(int((grid_y-1)/2))
+		if objectsmaze[y*2+1][x*2+2]==0:
+			objectsmaze[y*2+1][x*2+2]=8
 			count-=1
 	count=objects_hole #вместо стен
 	while count>0:
@@ -501,8 +520,9 @@ def displaymaze(activity):
 						if maze_objects[j][i]==6:
 							gameDisplay.blit(zoomhealth[image_index],(x,y))
 						if maze_objects[j][i]==7:
-							#pygame.draw.rect(gameDisplay, red, (x,y,cellsize,cellsize)) #hole
 							gameDisplay.blit(zoomhole[image_index],(x,y))
+						if maze_objects[j][i]==8:
+							gameDisplay.blit(zoomammo[image_index],(x,y))
 						if maze_objects[j][i]==5:
 							enemy_index=[enemy.index(k) for k in enemy if k[0]==i and k[1]==j and k[8]==False][0]#найти врага, cool!
 							if enemy[enemy_index][5]==0:
@@ -621,7 +641,11 @@ def displayscanner(scanner_mode,tick):
 					if scanner_mode=='OXYGEN' and concentration_oxygen>0 and (i-player_x)*(i-player_x)+(j-player_y)*(j-player_y)<radarsize**2:
 						color_oxygen=(0,0,maze_oxygen[j][i]*colorx)#int(255*maze_oxygen[j][i]/concentration_oxygen))
 						#print(concentration_oxygen,color_oxygen)
-						scanner_pixarray[i][j]=color_oxygen
+						try:
+							scanner_pixarray[i][j]=color_oxygen
+						except:
+							print(color_oxygen, concentration_oxygen)
+
 		#del scanner_pixarray
 		zoomscanner=pygame.transform.scale(scannerimage,(info_height,info_height))
 		#zoomscanner.set_colorkey(((0x000000)))
@@ -728,7 +752,7 @@ def update_expirience():
 
 #update level global parameters before start maze and after level complete or game over
 def mazelevels_update(level):
-	global grid_x,grid_y,maze_randomcicles,objects_oxygen,objects_energy,objects_movingblock,objects_enemy,enemy_maxlevel,objects_health,objects_hole,concentration_oxygen
+	global grid_x,grid_y,maze_randomcicles,objects_oxygen,objects_energy,objects_movingblock,objects_enemy,enemy_maxlevel,objects_health,objects_hole,concentration_oxygen,objects_ammo
 	i=len(mazelevels) #длина массива уровней
 	if level>=i: level=i-1 #уровень не превышает последний
 	print('сложность уровня: '+str(level))
@@ -743,6 +767,7 @@ def mazelevels_update(level):
 	objects_health=mazelevels[level][8]
 	objects_hole=mazelevels[level][9]
 	concentration_oxygen=mazelevels[level][10]
+	objects_ammo=mazelevels[level][11]
 	#лабиринты задают параметры при увеличении mazenumber
 	#grid_x,grid_y,maze_randomcicles,objects_oxygen,objects_energy,objects_movingblock,objects_enemy,maxlevel of enemy(?)
 	print ('cell size: '+str(cellsize))
@@ -1038,6 +1063,9 @@ health = pygame.image.load('health1.png').convert()
 zoomhealth=[pygame.transform.scale(health,(size,size)) for size in zoomsize]
 hole = pygame.image.load('hole1.png').convert()
 zoomhole=[pygame.transform.scale(hole,(size,size)) for size in zoomsize]
+ammo_image = pygame.image.load('ammo3.png').convert()
+zoomammo=[pygame.transform.scale(ammo_image,(size,size)) for size in zoomsize]
+
 arrow_up = pygame.image.load('arrow_up.png').convert()
 zoomarrow_up=[pygame.transform.scale(arrow_up,(size,size)) for size in zoomsize]
 arrow_down = pygame.image.load('arrow_down.png').convert()
@@ -1046,6 +1074,7 @@ arrow_left = pygame.image.load('arrow_left.png').convert()
 zoomarrow_left=[pygame.transform.scale(arrow_left,(size,size)) for size in zoomsize]
 arrow_right = pygame.image.load('arrow_right.png').convert()
 zoomarrow_right=[pygame.transform.scale(arrow_right,(size,size)) for size in zoomsize]
+
 bullet1=pygame.image.load('bullet1.png').convert()
 #bullet1=pygame.image.load('bullet2.png').convert()
 zoombullet1=[[],[],[],[]]
@@ -1057,11 +1086,12 @@ for i in range(len(zoomsize)):
 	zoomenemy1[i].set_colorkey((0x000000))
 	zoomenemy2[i].set_colorkey((0x000000))
 	zoomenemy3[i].set_colorkey((0x000000))
-	zoomenemy4[i].set_colorkey((0x000000))
+	zoomenemy4[i].set_colorkey((0x000000)) #black
 	zoomhealth[i].set_colorkey((4147404))
-	zoomenergy[i].set_colorkey((15539236))
-	zoomoxygen[i].set_colorkey((16777215))
+	zoomenergy[i].set_colorkey((15539236)) #red
+	zoomoxygen[i].set_colorkey((16777215)) #white
 	zoomhole[i].set_colorkey((16777215))
+	zoomammo[i].set_colorkey((15539236))
 	zoomarrow_up[i].set_colorkey((16777215))
 	zoomarrow_down[i].set_colorkey((16777215))
 	zoomarrow_left[i].set_colorkey((16777215))
@@ -1334,7 +1364,18 @@ def gameloop():
 			if player_heal>upgrades['HEALTH_MAX'][player_upgrades['HEALTH_MAX']]: player_heal=upgrades['HEALTH_MAX'][player_upgrades['HEALTH_MAX']]
 			maze_objects[player_y][player_x]=0
 			player_action['PICK']+=1
-
+		#test pick ammo:
+		if maze_objects[player_y][player_x]==8:
+			inventory_index=0
+			for i in range(1,len(player_inventory)):
+				if player_inventory[i][0]=="WEAPON" and player_inventory[i][1]==0: #if player have weapon and type=0 (small gun)
+					inventory_index=i
+			if inventory_index>0: #if player have gun
+				player_inventory[inventory_index][2]+=50
+				if player_inventory[inventory_index][2]>weapons[0][6]: #bullets in weapon no more when maximum in small gun
+					player_inventory[inventory_index][2]=weapons[0][6]
+				maze_objects[player_y][player_x]=0
+				player_action['PICK']+=1
 
 		#test level complete:
 		if player_x==grid_x-1 and player_y==grid_y-2: #game complete, reset game and player
@@ -1357,6 +1398,7 @@ def gameloop():
 			maze=startmaze()
 			maze_objects=startobjects() #generate array of objects
 			player_upgrades={'EXP':0,'ENERGY_MAX':0,'OXYGEN_MAX':0,'HEALTH_MAX':0,'SPEED_TICK':0,'FOG_RADIUS':0,'MELEE_DAMAGE':0,'OXYGEN_TIME':0,'OXYGEN_ENERGY':0}
+			player_inventory=[1,['WEAPON',0,0,0]]
 			initplayer()
 			maze_fog_update(player_x,player_y)
 			maze_oxygen=start_env(concentration_oxygen) #generate oxygen
