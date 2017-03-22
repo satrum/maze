@@ -991,7 +991,10 @@ def bullets_fly(bullets):
 	for i in range(length-1,-1,-1):
 		x=bullets[i][6]
 		y=bullets[i][7]
-		if maze[y][x]==1 or maze_objects[y][x]==4:#если стена, или двигающийся блок
+		if x<0 or x>=grid_x or y<0 or y>=grid_y:
+			print('bullet out of maze')
+			bullets.pop(i)
+		elif maze[y][x]==1 or maze_objects[y][x]==4:#если стена, или двигающийся блок
 			print('bullet in block')
 			bullets.pop(i)
 		elif maze_objects[y][x]==5: #если враг, нанести урон
