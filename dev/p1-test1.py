@@ -83,6 +83,7 @@ enemy_type=[
 #6 - здоровье
 #7 - урон от столкновения
 #8 - killed (False, True)
+# enemy (init in startobjects() #9 - direction)
 print ('cell size: '+str(cellsize))
 print ('grid_x:	'+str(grid_x))
 print ('grid_y:	'+str(grid_y))
@@ -352,11 +353,11 @@ def startobjects():
 			objectsmaze[y*2+1][x*2+2]=5
 			#print(count)
 			i=random.randrange(enemy_maxlevel+1)
-			enemy[count]=[x*2+2,y*2+1,10,0,0,0,0,0,False] #enemy x,y,speed(act=10),act,state(random=0),type,heal,damage,killed
-			enemy[count][2]=enemy_type[i][2]
-			enemy[count][5]=enemy_type[i][5]
-			enemy[count][6]=enemy_type[i][6]
-			enemy[count][7]=enemy_type[i][7]
+			enemy[count]=[x*2+2,y*2+1,10,0,0,0,0,0,False,'RIGHT'] #enemy x,y,speed(act=10),act,state(random=0),type,heal,damage,killed, direction
+			enemy[count][2]=enemy_type[i][2] #speed
+			enemy[count][5]=enemy_type[i][5] #type
+			enemy[count][6]=enemy_type[i][6] #heal
+			enemy[count][7]=enemy_type[i][7] #damage
 			count+=1
 	#print(str(objects_enemy)+' '+str(len(enemy)))
 	#print(objectsmaze)
@@ -706,6 +707,7 @@ def initplayer():
 	global player_x,player_y,player_action,player_oxygen,player_energy,player_heal,player_damage,player_speed,player_oxygen_time,player_oxygen_energy
 	global maze_fog,starttime,fog_radius
 	global cellsize
+	global player_bullets
 	cellsize=zoomsize[-1]
 	player_x=0
 	player_y=1
@@ -722,6 +724,7 @@ def initplayer():
 	#statistics:
 	player_action={'MOVE':0,'FIRE':0,'FOG':0,'PICK':0,'KILL':0}
 	print('initialize player x:',player_x,' player y:',player_y,' move:',player_action['MOVE'])
+	player_bullets=[] #сброс всех летящих пуль, иначе возникает проблема при их отрисовке, если у оставшихся координаты будут в новом лабиринте за пределами лабиринта
 	#fog of war:
 	maze_fog=[[0 for x in range(grid_x)] for y in range(grid_y)] #0 for fog and 1 for always visible
 	for i in range(0,grid_x):
@@ -805,17 +808,21 @@ def startover():
 
 #load player from file in main menu, or from network
 def loadplayer():
-	global mazenumber, player_expirience, maze, maze_objects, player_upgrades,maze_oxygen
+	global mazenumber, player_expirience, maze, maze_objects, player_upgrades,maze_oxygen,player_inventory
 	try:
 		file = open('saveplayer.txt')
 	except IOError as e:
 		print(u'не удалось открыть файл')
 	else:
 		a=[i for i in open('saveplayer.txt',"r")]
+		for i in a:
+			print(i)
 		mazenumber=int(a[0]) #1 строка это номер лабиринта
 		player_expirience=int(a[1]) #2 строка это опыт игрока
 		player_upgrades=eval(a[2]) #3 строка это dictionary player_upgrades в формате строки, преобразуется обратно в тип dictionary
+		player_inventory=eval(a[3]) #4 строка это list player_inventory в формате строки
 		print(player_upgrades, type(player_upgrades))
+		print(player_inventory,type(player_inventory))
 		print('загружен прогресс')
 		#init:
 		mazelevels_update(mazenumber) #считывание глобальных параметров уровня
@@ -834,7 +841,10 @@ def saveplayer():
 	open('saveplayer.txt','a').write(str(a[1]))
 	open('saveplayer.txt','a').write('\n')
 	open('saveplayer.txt','a').write(str(player_upgrades))
+	open('saveplayer.txt','a').write('\n')
+	open('saveplayer.txt','a').write(str(player_inventory))
 	print('сохранил прогресс в файл')
+
 
 #screen with upgrades buttons and player parameters
 def upgradeplayer():
