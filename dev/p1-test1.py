@@ -105,9 +105,10 @@ mazelevels=[
 [75, 75, 300 ,15,80, 200 ,90  ,1,8 ,0  ,0 ,8 ], #6 enemie level 1 75*75
 [75, 75, 200 ,15,80, 400 ,120 ,1,8 ,0  ,0 ,8 ], #7 more enemie level 1 75*75
 [101,101,500 ,0, 100,300 ,200 ,2,12,100,20,16],  #8 big level enemie level 2 101*101 holes and env_oxygen
-[201,201,2000,40,300,2000,300 ,3,20,0  ,0 ,40],  #9 very big level enemie level 3 201*201 (после этого апгрейды 2 уровня можно сделать)
-[201,201,9999,10,400,2000,1000,3,10,100,20,30]  #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
+[201,201,2000,40,300,2000,300 ,3,20,0  ,0 ,50],  #9 very big level enemie level 3 201*201 (после этого апгрейды 2 уровня можно сделать)
+[201,201,9999,10,400,2000,1000,3,10,100,20,60]  #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
 ]
+#0   1   2    3  4   5    6    7 8  9   10 11
 print(mazelevels)
 #лабиринты задают параметры при увеличении mazenumber
 #0 - grid_x
@@ -587,6 +588,7 @@ def displayplayer(activity):  # act in mainloop ['MOVE',cooldown tick]
 	y-=dy
 	image_index=zoomsize.index(cellsize)
 	gameDisplay.blit(zoomplayer1[image_index],(x,y))
+	'''
 	if player_direction=='RIGHT':
 		gameDisplay.blit(zoomarrow_right[image_index],(x,y))
 	elif player_direction=='LEFT':
@@ -595,6 +597,7 @@ def displayplayer(activity):  # act in mainloop ['MOVE',cooldown tick]
 		gameDisplay.blit(zoomarrow_up[image_index],(x,y))
 	elif player_direction=='DOWN':
 		gameDisplay.blit(zoomarrow_down[image_index],(x,y))
+	'''
 	pygame.draw.line(gameDisplay,red,(x,y),(x+int(player_heal*cellsize/upgrades['HEALTH_MAX'][player_upgrades['HEALTH_MAX']]),y)) #процент здоровья игрока
 	#pygame.draw.rect(gameDisplay, green, (x,y,cellsize,cellsize)) #player need image 
 	return x,y
@@ -1075,7 +1078,7 @@ hole = pygame.image.load('hole1.png').convert()
 zoomhole=[pygame.transform.scale(hole,(size,size)) for size in zoomsize]
 ammo_image = pygame.image.load('ammo3.png').convert()
 zoomammo=[pygame.transform.scale(ammo_image,(size,size)) for size in zoomsize]
-
+'''
 arrow_up = pygame.image.load('arrow_up.png').convert()
 zoomarrow_up=[pygame.transform.scale(arrow_up,(size,size)) for size in zoomsize]
 arrow_down = pygame.image.load('arrow_down.png').convert()
@@ -1084,7 +1087,7 @@ arrow_left = pygame.image.load('arrow_left.png').convert()
 zoomarrow_left=[pygame.transform.scale(arrow_left,(size,size)) for size in zoomsize]
 arrow_right = pygame.image.load('arrow_right.png').convert()
 zoomarrow_right=[pygame.transform.scale(arrow_right,(size,size)) for size in zoomsize]
-
+'''
 bullet1=pygame.image.load('bullet1.png').convert()
 #bullet1=pygame.image.load('bullet2.png').convert()
 zoombullet1=[[],[],[],[]]
@@ -1102,10 +1105,12 @@ for i in range(len(zoomsize)):
 	zoomoxygen[i].set_colorkey((16777215)) #white
 	zoomhole[i].set_colorkey((16777215))
 	zoomammo[i].set_colorkey((15539236))
+	'''
 	zoomarrow_up[i].set_colorkey((16777215))
 	zoomarrow_down[i].set_colorkey((16777215))
 	zoomarrow_left[i].set_colorkey((16777215))
 	zoomarrow_right[i].set_colorkey((16777215))
+	'''
 	for j in range(len(zoombullet1)):
 		zoombullet1[j][i].set_colorkey((16777215))
 #zoomoxygen.set_alpha(128)
@@ -1277,6 +1282,7 @@ def gameloop():
 						player_y+=1
 						maze_fog_update(player_x,player_y)
 						#continue
+			'''
 			if keypressed[pygame.K_RETURN] and player_inventory[player_inventory[0]][0]=='WEAPON': #если нажат предмет и предмет - оружие 
 				#print('enter pressed')
 				current_weapon=player_inventory[player_inventory[0]][1] #тип оружия
@@ -1286,6 +1292,7 @@ def gameloop():
 						print('fire')
 						weapon_fire() #сделать выстрел, потратить пулю в оружии, создать пулю
 					else: print('no bullets')
+			'''
 
 		if pygame.mouse.get_pressed()[0]==1 and player_inventory[player_inventory[0]][0]=='WEAPON': #если нажата левая кнопка мышки и предмет - оружие 
 			#print ('x: ',pygame.mouse.get_pos()[0],'y: ',pygame.mouse.get_pos()[1],'player x: ',player_display_x,'player y: ',player_display_y)
