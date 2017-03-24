@@ -108,7 +108,7 @@ mazelevels=[
 [201,201,2000,40,400,2000,300 ,3,20,0  ,0 ,50], #9 very big level enemie level 3 201*201 трудный лабиринт
 [201,201,9999,10,400,2000,1000,3,10,100,20,60], #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
 # 10 - надо агрессию у врагов! патроны заканчиваются!
-[251,251,9999,50,400,3000,2000,3,30,0  ,0 ,150] #11 пока тестируется. Цель - убить большое количество врагов.
+[251,251,9999,50,400,3000,2000,3,30,0  ,0 ,200] #11 пока тестируется. Цель - убить большое количество врагов.
 # 11 - Надо новый элемент, например оружие и апргейды на него. Базы: Телепорт, генераторы кислорода и энергии. 
 ]
 #0   1   2    3  4   5    6    7 8  9   10 11
@@ -146,7 +146,7 @@ directions={
 player_direction='RIGHT' #направление взгляда игрока по умолчанию, по нему идет стрельба или другое использование предметов, если не используется мышь. Мышь меняет позицию.
 player_last_move='RIGHT' #направление последнего движения, учитывается при прорисовке игрока если он двигался и act>0
 #player statistics:
-player_action={'MOVE':0,'FIRE':0,'FOG':0, 'PICK':0,'KILL':0} #player action counts. statistics
+player_action={'MOVE':0,'FIRE':0,'FOG':0, 'PICK':0,'KILL':0,'HIT':0} #player action counts. statistics
 print('player x:',player_x,' player y:',player_y,' move:',player_action['MOVE'])
 starttime=time.clock()
 pausegame=False
@@ -164,7 +164,8 @@ upgrades={
 	'FOG_RADIUS':   [2,  3,   4,   5    ,6    ],
 	'MELEE_DAMAGE': [1,  2,   3,   4    ,6    ],
 	'OXYGEN_TIME':  [0.6,0.5, 0.4, 0.3  ,0.2  ],
-	'OXYGEN_ENERGY':[0.4,0.3, 0.2, 0.1  ,0.05 ] #затраты энергии при сборе внешнего кислорода
+	'OXYGEN_ENERGY':[0.4,0.3, 0.2, 0.1  ,0.05 ], #затраты энергии при сборе внешнего кислорода
+	'BULLETS_MAX'  :[100,150, 200, 300  ,500  ]  #maximum bullets from weapons[6]
 }
 #player upgrades загружается при loadplayer() и сохраняется при saveplayer(), а так же gameover()
 player_upgrades={
@@ -176,7 +177,8 @@ player_upgrades={
 	'FOG_RADIUS':0,
 	'MELEE_DAMAGE':0,
 	'OXYGEN_TIME':0,
-	'OXYGEN_ENERGY':0
+	'OXYGEN_ENERGY':0,
+	'BULLETS_MAX':0
 } #первый - сумма сделанных апгрейдов, дальше как в upgrades 0,1,2
 upgrade_name='' #нужно  для меню апгрейдов
 player_energy=upgrades['ENERGY_MAX'][player_upgrades['ENERGY_MAX']]
@@ -618,7 +620,9 @@ def displayinfo():
 	gameDisplay.blit(mytext,(10,display_y+40))
 	mytext = myfont.render('energy:'+str(int(player_energy))+' %', True, black)
 	gameDisplay.blit(mytext,(10,display_y+60))
-	mytext = myfont.render('player x:'+str(player_x)+' player y:'+str(player_y)+' move:'+str(player_action['MOVE'])+' fog:'+str(player_action['FOG'])+' pick:'+str(player_action['PICK'])+' kill:'+str(player_action['KILL']), True, black)
+	stats='player x:'+str(player_x)+' player y:'+str(player_y)+' move:'+str(player_action['MOVE'])+' fog:'+str(player_action['FOG'])
+	stats=stats+' pick:'+str(player_action['PICK'])+' kill:'+str(player_action['KILL'])+' fire:'+str(player_action['FIRE'])+' hit:'+str(player_action['HIT'])
+	mytext = myfont.render(stats, True, black)
 	gameDisplay.blit(mytext,(10,display_y+80))
 	expirience=player_action['PICK']*100+player_action['FOG']+player_action['MOVE']+player_action['KILL']*100+int(player_oxygen)+int(player_energy)+int(player_heal)
 	mytext = myfont.render('exp after level complete: '+str(expirience),True,black)
@@ -633,6 +637,9 @@ def displayinfo():
 	gameDisplay.blit(mytext,(300,display_y+20))
 	mytext = myfont.render('player weapon: '+str(weapons[player_inventory[player_inventory[0]][1]][7]),True,black)
 	gameDisplay.blit(mytext,(300,display_y))
+	mytext = myfont.render('hit accuracy: '+str( int( 100*(player_action['HIT']+1)/(player_action['FIRE']+1) ) ),True,black)
+	gameDisplay.blit(mytext,(300,display_y+40))
+	
 
 #display scanner in radius of half of level size. In DEV 
 def displayscanner(scanner_mode,tick):
@@ -728,7 +735,7 @@ def initplayer():
 	print('upgraded player ENERGY_MAX:',player_energy, 'OXYGEN_MAX:', player_oxygen, 'HEALTH_MAX:', player_heal, 'MELEE_DAMAGE:', player_damage, 'FOG_RADIUS:', fog_radius, 'SPEED_TICK:', player_speed, 'OXYGEN_TIME:', player_oxygen_time)
 	print('OXYGEN_ENERGY:',player_oxygen_energy)
 	#statistics:
-	player_action={'MOVE':0,'FIRE':0,'FOG':0,'PICK':0,'KILL':0}
+	player_action={'MOVE':0,'FIRE':0,'FOG':0,'PICK':0,'KILL':0,'HIT':0}
 	print('initialize player x:',player_x,' player y:',player_y,' move:',player_action['MOVE'])
 	player_bullets=[] #сброс всех летящих пуль, иначе возникает проблема при их отрисовке, если у оставшихся координаты будут в новом лабиринте за пределами лабиринта
 	#fog of war:
@@ -867,8 +874,8 @@ def upgradeplayer():
 	while True:
 		#pygame.draw.rect(gameDisplay, black, (50,50,250,400))
 		gameDisplay.blit(zoomstartoverimg,(0,0))
-		pygame.draw.rect(gameDisplay,black,(35,35,550,460))
-		pygame.draw.rect(gameDisplay,green,(35,35,550,460),1)
+		pygame.draw.rect(gameDisplay,black,(35,35,550,500))
+		pygame.draw.rect(gameDisplay,green,(35,35,550,500),1)
 		for event in pygame.event.get():
 			#print(event)
 			if event.type == pygame.QUIT:
@@ -898,8 +905,11 @@ def upgradeplayer():
 		if player_upgrades['OXYGEN_ENERGY']<len(upgrades['OXYGEN_ENERGY'])-1 and player_expirience>upgrades['EXP'][player_upgrades['OXYGEN_ENERGY']+1]:
 			upgrade_name='OXYGEN_ENERGY'
 			display_button("ENERGY FOR OXYGEN",40,320,250,39,green,bright_green,upgrade_param)
+		if player_upgrades['BULLETS_MAX']<len(upgrades['BULLETS_MAX'])-1 and player_expirience>upgrades['EXP'][player_upgrades['BULLETS_MAX']+1]:
+			upgrade_name='BULLETS_MAX'
+			display_button("BULLETS MAX",40,360,250,39,green,bright_green,upgrade_param)
 
-		display_button("Return",40,440,250,40,green,bright_green,main_menu)
+		display_button("Return",40,480,250,40,green,bright_green,main_menu)
 		
 		myfont = pygame.font.SysFont(font_def,20)
 		mytext = myfont.render('PLAYER ENERGY:    '+str(player_energy), True, white)
@@ -918,10 +928,12 @@ def upgradeplayer():
 		gameDisplay.blit(mytext,(300,285))
 		mytext = myfont.render('ENERGY FOR OXYGEN:'+str(player_oxygen_energy), True, white)
 		gameDisplay.blit(mytext,(300,325))
-		mytext = myfont.render('SUMM OF UPGRADES: '+str(player_upgrades['EXP']), True, white)
+		mytext = myfont.render('MAX BULLETS:'+str(upgrades['BULLETS_MAX'][player_upgrades['BULLETS_MAX']])+' %', True, white)
 		gameDisplay.blit(mytext,(300,365))
-		mytext = myfont.render('EXPIRIENCE:       '+str(player_expirience), True, white)
+		mytext = myfont.render('SUMM OF UPGRADES: '+str(player_upgrades['EXP']), True, white)
 		gameDisplay.blit(mytext,(300,405))
+		mytext = myfont.render('EXPIRIENCE:       '+str(player_expirience), True, white)
+		gameDisplay.blit(mytext,(300,445))
 		pygame.display.update()
 		clock.tick(10)
 	main_menu()
@@ -993,7 +1005,7 @@ def main_menu():
 
 #сделать выстрел, потратить пулю в оружии, создать пулю
 def weapon_fire():
-	global player_inventory, player_bullets
+	global player_inventory, player_bullets,player_action
 	player_inventory[player_inventory[0]][2]-=1 #уменьшить число пуль на 1
 	print('bullets in weapon remain:'+str(player_inventory[player_inventory[0]][2]))
 	current_weapon=player_inventory[player_inventory[0]][1] #текущий тип оружия
@@ -1001,6 +1013,7 @@ def weapon_fire():
 	new_bullet=[current_weapon,weapons[current_weapon][3],0,weapons[current_weapon][5],player_x,player_y,player_x+directions[player_direction][0],player_y+directions[player_direction][1],player_direction,weapons[current_weapon][2]]
 	player_bullets.append(new_bullet)
 	print(player_bullets)
+	player_action['FIRE']+=1
 	#player bullets:
 	#	0 - тип вооружения
 	#	1 - speed (from weapon speed)
@@ -1040,6 +1053,7 @@ def bullets_fly(bullets):
 			bullets.pop(i)
 		elif maze_objects[y][x]==5: #если враг, нанести урон
 			print('bullet in enemy')
+			player_action['HIT']+=1
 			damage=bullets[i][9]
 			enemy_index=[enemy.index(j) for j in enemy if j[0]==x and j[1]==y][0]#найти индекс врага
 			enemy[enemy_index][6]=enemy[enemy_index][6]-damage #урон врагу пулей
@@ -1392,8 +1406,9 @@ def gameloop():
 					inventory_index=i
 			if inventory_index>0: #if player have gun
 				player_inventory[inventory_index][2]+=50
-				if player_inventory[inventory_index][2]>weapons[0][6]: #bullets in weapon no more when maximum in small gun
-					player_inventory[inventory_index][2]=weapons[0][6]
+				bullets_maximum=upgrades['BULLETS_MAX'][player_upgrades['BULLETS_MAX']]*weapons[0][6]//100 #расчет максимума пуль для оружия по апгрейдам
+				if player_inventory[inventory_index][2]>bullets_maximum: #bullets in weapon no more when maximum in small gun
+					player_inventory[inventory_index][2]=bullets_maximum
 				maze_objects[player_y][player_x]=0
 				player_action['PICK']+=1
 
@@ -1417,7 +1432,7 @@ def gameloop():
 			#update_expirience()
 			maze=startmaze()
 			maze_objects=startobjects() #generate array of objects
-			player_upgrades={'EXP':0,'ENERGY_MAX':0,'OXYGEN_MAX':0,'HEALTH_MAX':0,'SPEED_TICK':0,'FOG_RADIUS':0,'MELEE_DAMAGE':0,'OXYGEN_TIME':0,'OXYGEN_ENERGY':0}
+			player_upgrades={'EXP':0,'ENERGY_MAX':0,'OXYGEN_MAX':0,'HEALTH_MAX':0,'SPEED_TICK':0,'FOG_RADIUS':0,'MELEE_DAMAGE':0,'OXYGEN_TIME':0,'OXYGEN_ENERGY':0,'BULLETS_MAX':0}
 			player_inventory=[1,['WEAPON',0,0,0]]
 			initplayer()
 			maze_fog_update(player_x,player_y)
