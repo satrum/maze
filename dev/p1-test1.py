@@ -83,7 +83,9 @@ enemy_type=[
 #6 - здоровье
 #7 - урон от столкновения
 #8 - killed (False, True)
-# enemy (init in startobjects() #9 - 0,1,2 or 3 move: enemy_move() - dirarray)
+# only in enemy list (init in startobjects() :
+#9 - 0,1,2 or 3 move: enemy_move() - dirarray)
+#10 - FLAG enemy moved (False or True)
 print ('cell size: '+str(cellsize))
 print ('grid_x:	'+str(grid_x))
 print ('grid_y:	'+str(grid_y))
@@ -221,7 +223,7 @@ player_bullets=[]
 # пример: [0,weapons[0][3],0,weapons[0][5],player_x,player_y,player_x+direction[player_direction][0],player_y+direction[player_direction][1],player_direction,weapons[0][2]] - начало при выстреле
 player_inventory=[
 1,
-['WEAPON',0,0,0]
+['WEAPON',0,100,0]
 ]
 # player inventory
 #	player_inventory[0] - текущий предмет
@@ -359,7 +361,7 @@ def startobjects():
 			objectsmaze[y*2+1][x*2+2]=5
 			#print(count)
 			i=random.randrange(enemy_maxlevel+1) #случайный выбор уровня врагов
-			enemy[count]=[x*2+2,y*2+1,10,0,0,0,0,0,False,0] #enemy x,y,speed(act=10),act,state(random=0),type,heal,damage,killed, direction
+			enemy[count]=[x*2+2,y*2+1,10,0,0,0,0,0,False,0,False] #enemy x,y,speed(act=10),act,state(random=0),type,heal,damage,killed, direction, FLAG_last_moved
 			enemy[count][2]=enemy_type[i][2] #speed
 			enemy[count][4]=enemy_type[i][4] #state
 			enemy[count][5]=enemy_type[i][5] #type
@@ -445,6 +447,7 @@ def enemy_move():
 			#0 - random direction choose
 			if enemy_state==0: 
 				newdirection=random.randrange(4) #random move
+				enemy[i][9]=newdirection #сохранить новое направление движения врага
 				dx=dirarray[newdirection][0] #определяем смещение по x
 				dy=dirarray[newdirection][1] #определяем смещение по y
 				enemy_x+=dx
@@ -472,6 +475,7 @@ def enemy_move():
 				player_heal=player_heal-enemy[i][7] #урон от врага
 				enemy[i][6]=enemy[i][6]-player_damage #урон врагу
 				enemy[i][3]=enemy_speed #враг потратил ход act=speed
+				enemy[i][10]=False #enemy moved FLAG
 				if enemy[i][6]<=0:
 					print('enemy destroyed by impact')
 					enemy[i][8]=True #враг считается убитым
@@ -481,6 +485,7 @@ def enemy_move():
 				#print('монстр попытался выйти',enemy_x,enemy_y)
 				newdirection=random.randrange(4) #random move
 				enemy[i][9]=newdirection #сохранить новое направление движения врага
+				enemy[i][10]=False #enemy moved FLAG
 				pass
 			elif maze[enemy_y][enemy_x]==0 and maze_objects[enemy_y][enemy_x]==0: #враг ходит только на пустое поле и без предметов
 					maze_objects[enemy[i][1]][enemy[i][0]]=0
@@ -488,12 +493,20 @@ def enemy_move():
 					enemy[i][1]=enemy_y
 					maze_objects[enemy_y][enemy_x]=5
 					enemy[i][3]=enemy_speed #враг потратил ход act=speed
+					enemy[i][10]=True #enemy moved FLAG
 
 
 #display maze: GLOBAL - surfaces of images, cellsize, grid_x, grid_y, FLAG_FOG, maze, maze_objects
 def displaymaze(activity):
 	global display_wall_tick
 	display_wall_tick+=1
+	dirarray={
+	0: [1 , 0, 'RIGHT'],
+	1: [-1, 0, 'LEFT' ],
+	2: [0 ,-1, 'UP'   ],
+	3: [0 , 1, 'DOWN' ],
+	4: [0 , 0, 'STAY AND FIRE']
+	}
 	#gameDisplay.blit(zoomscreen,(0,0)) #фоновая картинка, если нет проверки поля на 0
 	display_x_temp=int(display_x/cellsize) #сколько клеток влезет по горизонтали
 	display_y_temp=int(display_y/cellsize) #сколько клеток влезет по вертикали
@@ -558,8 +571,10 @@ def displaymaze(activity):
 							gameDisplay.blit(zoomhole[image_index],(x,y))
 						if maze_objects[j][i]==8:
 							gameDisplay.blit(zoomammo[image_index],(x,y))
-						if maze_objects[j][i]==5:
-							enemy_index=[enemy.index(k) for k in enemy if k[0]==i and k[1]==j and k[8]==False][0]#найти врага, cool!
+						#if maze_objects[j][i]==5:
+							#enemy_index=[enemy.index(k) for k in enemy if k[0]==i and k[1]==j and k[8]==False][0]#найти врага, cool!
+							
+							'''
 							if enemy[enemy_index][5]==0:
 								gameDisplay.blit(zoomenemy1[image_index],(x,y))
 							if enemy[enemy_index][5]==1:
@@ -569,12 +584,44 @@ def displaymaze(activity):
 							if enemy[enemy_index][5]==3:
 								gameDisplay.blit(zoomenemy4[image_index],(x,y))
 							enemy_heal=int(enemy[enemy_index][6]*cellsize/enemy_type[enemy[enemy_index][5]][6]) #расчет процента здоровья врага
-							pygame.draw.line(gameDisplay, red, (x,y),(x+enemy_heal,y))
+							pygame.draw.line(gameDisplay, red, (x,y),(x+enemy_heal,y))'''
+
 						#display env oxygen
 						if maze_oxygen[j][i]>0 and FLAG_SCANNER:
 							pygame.draw.line(gameDisplay, blue, (x,y+1),(x+int(maze_oxygen[j][i]*cellsize/concentration_oxygen),y+1))
 					else:
 						pygame.draw.rect(gameDisplay, black, (x,y,cellsize,cellsize)) #fog of war
+
+	#display enemies
+	enemy_display_count=0 #calculate displayed enemies
+	for k in enemy:
+		enemy_x=cellsize*(k[0]-center_x_temp+diff_x+display_x_temp//2)#+display_x//2
+		enemy_y=cellsize*(k[1]-center_y_temp+diff_y+display_y_temp//2)#+display_y//2
+		enemy_x+=dx
+		enemy_y+=dy
+		outscreen=enemy_x+cellsize<0 or enemy_x>=display_x or enemy_y+cellsize<0 or enemy_y>=display_y
+		if not outscreen and (maze_fog[ k[1] ][ k[0] ]==1 or FLAG_FOG) and k[8]==False:
+			enemy_display_count+=1 #this enemy in display
+			enemy_speed=k[2]
+			enemy_act=k[3] #<speed - двигается
+			enemy_direction=k[9] #9 - direction 0-RIGHT 1-LEFT 2-UP 3-DOWN
+			#if enemy_act<enemy_speed: #если враг в движении
+			if k[10]:
+				enemy_dx=int(dirarray[enemy_direction][0]*cellsize*enemy_act/enemy_speed)
+				enemy_dy=int(dirarray[enemy_direction][1]*cellsize*enemy_act/enemy_speed)
+				enemy_x-=enemy_dx
+				enemy_y-=enemy_dy
+			if   k[5]==0:
+				gameDisplay.blit(zoomenemy1[image_index],(enemy_x,enemy_y))
+			elif k[5]==1:
+				gameDisplay.blit(zoomenemy2[image_index],(enemy_x,enemy_y))
+			elif k[5]==2:
+				gameDisplay.blit(zoomenemy3[image_index],(enemy_x,enemy_y))
+			elif k[5]==3:
+				gameDisplay.blit(zoomenemy4[image_index],(enemy_x,enemy_y))
+			enemy_heal=int(k[6]*cellsize/enemy_type[ k[5] ][6]) #расчет процента здоровья врага
+			pygame.draw.line(gameDisplay, red, (enemy_x,enemy_y),(enemy_x+enemy_heal,enemy_y))
+	print ('count display enemy by tick:'+str(enemy_display_count)) #print count of displayed enemies
 	#display bullets
 	for i in range(len(player_bullets)):
 		bullet_x=player_bullets[i][6]
