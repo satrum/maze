@@ -69,10 +69,10 @@ enemy_maxlevel=0
 #убрать генерацию в функцию startobjects()
 #enemy=[[] for i in range(objects_enemy)]
 enemy_type=[
-[0,0,10,0,0,0,5,2,False], #heal=5 damage=2 cooldown=10
-[0,0,5 ,0,0,1,2,10,False], #heal=2 damage=10 cooldown=5
-[0,0,20,0,0,2,4,10,False], #heal=4 damage=10 cooldown=20
-[0,0,30,0,0,3,6,15,False] #heal=6 damage=15 cooldown=30
+[0,0,10,0,1,0,5,2,False], #heal=5 damage=2 cooldown=10 state - from block to block
+[0,0,5 ,0,0,1,2,10,False], #heal=2 damage=10 cooldown=5 state - random move
+[0,0,20,0,0,2,4,10,False], #heal=4 damage=10 cooldown=20 state - random move
+[0,0,30,0,0,3,6,15,False] #heal=6 damage=15 cooldown=30 state - random move
 ]
 #0 - x
 #1 - y
@@ -83,7 +83,7 @@ enemy_type=[
 #6 - здоровье
 #7 - урон от столкновения
 #8 - killed (False, True)
-# enemy (init in startobjects() #9 - direction)
+# enemy (init in startobjects() #9 - 0,1,2 or 3 move: enemy_move() - dirarray)
 print ('cell size: '+str(cellsize))
 print ('grid_x:	'+str(grid_x))
 print ('grid_y:	'+str(grid_y))
@@ -96,7 +96,7 @@ print ('enemies max level: '+str(enemy_maxlevel))
 #print (len(enemy))
 mazenumber=0 #count of maze generation
 mazelevels=[
-[21, 21, 30  ,0, 3 , 0   ,0   ,0,0 ,0  ,0 ,0 ], #0 easy test level, +energy
+[21, 21, 30  ,0, 3 , 0   ,10  ,0,0 ,0  ,0 ,0 ], #0 easy test level, +energy
 [51, 45, 100 ,5 ,20, 0   ,0   ,0,0 ,0  ,0 ,0 ], #1 medium test level, +oxygen
 [75, 45, 200 ,10,25, 0   ,0   ,0,0 ,0  ,0 ,0 ], #2 medium level, energy+oxygen
 [75, 45, 100 ,10,40, 100 ,0   ,0,0 ,0  ,0 ,0 ], #3 moving blocks (сложный лабиринт)
@@ -358,9 +358,10 @@ def startobjects():
 		if objectsmaze[y*2+1][x*2+2]==0:
 			objectsmaze[y*2+1][x*2+2]=5
 			#print(count)
-			i=random.randrange(enemy_maxlevel+1)
-			enemy[count]=[x*2+2,y*2+1,10,0,0,0,0,0,False,'RIGHT'] #enemy x,y,speed(act=10),act,state(random=0),type,heal,damage,killed, direction
+			i=random.randrange(enemy_maxlevel+1) #случайный выбор уровня врагов
+			enemy[count]=[x*2+2,y*2+1,10,0,0,0,0,0,False,0] #enemy x,y,speed(act=10),act,state(random=0),type,heal,damage,killed, direction
 			enemy[count][2]=enemy_type[i][2] #speed
+			enemy[count][4]=enemy_type[i][4] #state
 			enemy[count][5]=enemy_type[i][5] #type
 			enemy[count][6]=enemy_type[i][6] #heal
 			enemy[count][7]=enemy_type[i][7] #damage
@@ -421,25 +422,50 @@ def next_env(env_maze): #таблица среды и имя среды
 #move enemies
 def enemy_move():
 	global enemy,maze_objects,player_heal,player_action
+	dirarray={
+	0: [1 , 0, 'RIGHT'],
+	1: [-1, 0, 'LEFT' ],
+	2: [0 ,-1, 'UP'   ],
+	3: [0 , 1, 'DOWN' ],
+	4: [0 , 0, 'STAY AND FIRE']
+	}
 	for i in range(len(enemy)): #для каждого врага расчет отдельно
 		enemy_x=enemy[i][0]
 		enemy_y=enemy[i][1]
 		enemy_speed=enemy[i][2]
 		enemy_act=enemy[i][3]
-		enemy_state=enemy[i][4]
+		
+		enemy_state=enemy[i][4] #4 - state(0 - случайное блуждание, 1 - от края до края, 2 - нападение, 3 - убегает, 4 - стоит)
+		enemy_direction=enemy[i][9] #9 - direction 0-RIGHT 1-LEFT 2-UP 3-DOWN
+
 		if enemy_act>0:
 			enemy[i][3]-=1 #враг неподвижен пока не закончит ход
 		elif enemy[i][8]==False: #враг живой
-			#здесь движение
-			direction=random.randrange(4) #random move
-			if direction==0:
-				enemy_x+=1
-			elif direction==1:
-				enemy_x-=1
-			elif direction==2:
-				enemy_y-=1
-			elif direction==3:
-				enemy_y+=1
+			#здесь выбор тактики и само движение
+			#0 - random direction choose
+			if enemy_state==0: 
+				newdirection=random.randrange(4) #random move
+				dx=dirarray[newdirection][0] #определяем смещение по x
+				dy=dirarray[newdirection][1] #определяем смещение по y
+				enemy_x+=dx
+				enemy_y+=dy
+			#1 - move to block, after random
+			elif enemy_state==1:
+				dx=dirarray[enemy_direction][0] #определяем смещение по x
+				dy=dirarray[enemy_direction][1] #определяем смещение по y
+				if maze[enemy_y+dy][enemy_x+dx]==0 and maze_objects[enemy_y+dy][enemy_x+dx]==0: #если можно идти дальше по направлению
+					enemy_x+=dx
+					enemy_y+=dy
+				else: #иначе меняем направление на любое из трех других
+					newdirection=random.randrange(4) #random move
+					while newdirection==enemy_direction: #пока выбранное направление остается, пытаться сменить
+						newdirection=random.randrange(4) #random move
+					enemy[i][9]=newdirection #сохранить новое направление движения врага
+					dx=dirarray[newdirection][0] #определяем смещение по x
+					dy=dirarray[newdirection][1] #определяем смещение по y
+					enemy_x+=dx
+					enemy_y+=dy
+
 			#print(enemy_x,enemy_y,enemy[i][0],enemy[i][1])
 			if enemy_x==player_x and enemy_y==player_y:
 				print('impact with player',enemy_x,enemy_y,player_x,player_y)
@@ -451,8 +477,10 @@ def enemy_move():
 					enemy[i][8]=True #враг считается убитым
 					maze_objects[enemy[i][1]][enemy[i][0]]=0 #враг удаляется из предметов
 					player_action['KILL']+=1 #увеличиваем статистику убийств
-			elif enemy_x==0 or enemy_x==grid_x or enemy_y==0 or enemy_y==grid_y: #враг не может войти в крайние поля лабиринта
+			elif enemy_x==0 or enemy_x==grid_x-1 or enemy_y==0 or enemy_y==grid_y-1: #враг не может войти в крайние поля лабиринта
 				#print('монстр попытался выйти',enemy_x,enemy_y)
+				newdirection=random.randrange(4) #random move
+				enemy[i][9]=newdirection #сохранить новое направление движения врага
 				pass
 			elif maze[enemy_y][enemy_x]==0 and maze_objects[enemy_y][enemy_x]==0: #враг ходит только на пустое поле и без предметов
 					maze_objects[enemy[i][1]][enemy[i][0]]=0
