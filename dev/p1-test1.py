@@ -69,11 +69,12 @@ enemy_maxlevel=0
 #убрать генерацию в функцию startobjects()
 #enemy=[[] for i in range(objects_enemy)]
 enemy_type=[
-[0,0,10,0,1,0,5,2,False], #heal=5 damage=2 cooldown=10 state - from block to block
+[0,0,10,0,2,0,5,2,False], #heal=5 damage=2 cooldown=10 state - aggressive
 [0,0,5 ,0,0,1,2,10,False], #heal=2 damage=10 cooldown=5 state - random move
 [0,0,20,0,0,2,4,10,False], #heal=4 damage=10 cooldown=20 state - random move
 [0,0,30,0,0,3,6,15,False] #heal=6 damage=15 cooldown=30 state - random move
 ]
+#0 1 2  3 4 5 6 7  8
 #0 - x
 #1 - y
 #2 - speed(10 act)
@@ -431,6 +432,12 @@ def enemy_move():
 	3: [0 , 1, 'DOWN' ],
 	4: [0 , 0, 'STAY AND FIRE']
 	}
+	randomdirarray={
+	0: [1,2],
+	1: [1,3],
+	2: [0,3],
+	3: [0,2]
+	}
 	for i in range(len(enemy)): #для каждого врага расчет отдельно
 		enemy_x=enemy[i][0]
 		enemy_y=enemy[i][1]
@@ -468,7 +475,62 @@ def enemy_move():
 					dy=dirarray[newdirection][1] #определяем смещение по y
 					enemy_x+=dx
 					enemy_y+=dy
+			#2 - agressive mode
+			elif enemy_state==2:
+				pos_dx=enemy_x-player_x
+				pos_dy=enemy_y-player_y
+				#newdirection=enemy[i][9]
+				#расчет направления, пока только 4
+				if pos_dx==0:
+					if pos_dy>0: newdirection=2 #up
+					else: newdirection=3 #down
+				if pos_dy==0:
+					if pos_dx>0: newdirection=1 #left
+					else: newdirection=0 #right	
+				if pos_dx>0 and pos_dy>0: newdirection=randomdirarray[0][random.randrange(2)]
+				if pos_dx>0 and pos_dy<0: newdirection=randomdirarray[1][random.randrange(2)]
+				if pos_dx<0 and pos_dy<0: newdirection=randomdirarray[2][random.randrange(2)]
+				if pos_dx<0 and pos_dy>0: newdirection=randomdirarray[3][random.randrange(2)]
+				#print(pos_dx,pos_dy,newdirection)
+				dx=dirarray[newdirection][0] #определяем смещение по x
+				dy=dirarray[newdirection][1] #определяем смещение по y
+				if maze[enemy_y+dy][enemy_x+dx]!=0 or maze_objects[enemy_y+dy][enemy_x+dx]!=0:
+					newdirection=random.randrange(4) #random move
+					dx=dirarray[newdirection][0] #определяем смещение по x
+					dy=dirarray[newdirection][1] #определяем смещение по y
+					#print ('enemy '+str(i)+' random direction: '+dirarray[newdirection][2])
+				enemy_x+=dx
+				enemy_y+=dy
+				enemy[i][9]=newdirection
 
+			#3 - affraid mode
+			elif enemy_state==3:
+				pos_dx=player_x-enemy_x
+				pos_dy=player_y-enemy_y
+				#newdirection=enemy[i][9]
+				#расчет направления, пока только 4
+				if pos_dx==0:
+					if pos_dy>0: newdirection=2 #up
+					else: newdirection=3 #down
+				if pos_dy==0:
+					if pos_dx>0: newdirection=1 #left
+					else: newdirection=0 #right	
+				if pos_dx>0 and pos_dy>0: newdirection=randomdirarray[0][random.randrange(2)]
+				if pos_dx>0 and pos_dy<0: newdirection=randomdirarray[1][random.randrange(2)]
+				if pos_dx<0 and pos_dy<0: newdirection=randomdirarray[2][random.randrange(2)]
+				if pos_dx<0 and pos_dy>0: newdirection=randomdirarray[3][random.randrange(2)]
+				#print(pos_dx,pos_dy,newdirection)
+				dx=dirarray[newdirection][0] #определяем смещение по x
+				dy=dirarray[newdirection][1] #определяем смещение по y
+				if maze[enemy_y+dy][enemy_x+dx]!=0 or maze_objects[enemy_y+dy][enemy_x+dx]!=0:
+					newdirection=random.randrange(4) #random move
+					dx=dirarray[newdirection][0] #определяем смещение по x
+					dy=dirarray[newdirection][1] #определяем смещение по y
+					#print ('enemy '+str(i)+' random direction: '+dirarray[newdirection][2])
+				enemy_x+=dx
+				enemy_y+=dy
+				enemy[i][9]=newdirection
+				
 			#print(enemy_x,enemy_y,enemy[i][0],enemy[i][1])
 			if enemy_x==player_x and enemy_y==player_y:
 				print('impact with player',enemy_x,enemy_y,player_x,player_y)
@@ -621,7 +683,7 @@ def displaymaze(activity):
 				gameDisplay.blit(zoomenemy4[image_index],(enemy_x,enemy_y))
 			enemy_heal=int(k[6]*cellsize/enemy_type[ k[5] ][6]) #расчет процента здоровья врага
 			pygame.draw.line(gameDisplay, red, (enemy_x,enemy_y),(enemy_x+enemy_heal,enemy_y))
-	print ('count display enemy by tick:'+str(enemy_display_count)) #print count of displayed enemies
+	#print ('count display enemy by tick:'+str(enemy_display_count)) #print count of displayed enemies
 	#display bullets
 	for i in range(len(player_bullets)):
 		bullet_x=player_bullets[i][6]
