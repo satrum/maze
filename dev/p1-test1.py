@@ -45,6 +45,7 @@ maze=[[]]
 maze_fog=[[]]
 FLAG_FOG=False #False for fog and True for always visible
 FLAG_SCANNER=False #True for on, False - off
+FLAG_SOUNDON=True  #True for sound on, False - off
 # 0 - not visible
 # 1 - visible
 maze_objects=[[]]
@@ -65,14 +66,17 @@ objects_ammo=0 #ammo for 50 bullets
 # 8 - bullets (small gun)
 #На карте появляются враги(монстры), которые перемещаются, у них есть скорость, уровень агрессии, урон, здоровье.
 objects_enemy=50
-enemy_maxlevel=0
+enemy_maxlevel=[0]
 #убрать генерацию в функцию startobjects()
 #enemy=[[] for i in range(objects_enemy)]
 enemy_type=[
-[0,0,10,0,2,0,5,2,False], #heal=5 damage=2 cooldown=10 state - aggressive
-[0,0,5 ,0,0,1,2,10,False], #heal=2 damage=10 cooldown=5 state - random move
-[0,0,20,0,0,2,4,10,False], #heal=4 damage=10 cooldown=20 state - random move
-[0,0,30,0,0,3,6,15,False] #heal=6 damage=15 cooldown=30 state - random move
+[0,0,10,0,2,0,5,2 ,False], #0 heal=5 damage=2 cooldown=10 state - agressive zoomenemy1 
+[0,0,5 ,0,0,1,2,10,False], #1 heal=2 damage=10 cooldown=5 state - random move zoomenemy2 
+[0,0,20,0,0,2,4,10,False], #2 heal=4 damage=10 cooldown=20 state - random move zoomenemy3
+[0,0,30,0,0,3,6,15,False], #3 heal=6 damage=15 cooldown=30 state - random move zoomenemy4
+
+[0,0,5 ,0,3,4,2,10,False], #4 heal=2 damage=10 cooldown=5 state - affraid move zoomenemy2
+[0,0,20,0,2,5,4,10,False], #5 heal=4 damage=10 cooldown=20 state - agressive move zoomenemy3
 ]
 #0 1 2  3 4 5 6 7  8
 #0 - x
@@ -99,22 +103,23 @@ print ('enemies max level: '+str(enemy_maxlevel))
 #print (len(enemy))
 mazenumber=0 #count of maze generation
 mazelevels=[
-[21, 21, 30  ,0, 3 , 0   ,10  ,0,0 ,0  ,0 ,0 ], #0 easy test level, +energy
-[51, 45, 100 ,5 ,20, 0   ,0   ,0,0 ,0  ,0 ,0 ], #1 medium test level, +oxygen
-[75, 45, 200 ,10,25, 0   ,0   ,0,0 ,0  ,0 ,0 ], #2 medium level, energy+oxygen
-[75, 45, 100 ,10,40, 100 ,0   ,0,0 ,0  ,0 ,0 ], #3 moving blocks (сложный лабиринт)
-[75, 45, 200 ,10,50, 150 ,30  ,0,2 ,0  ,0 ,2 ], #4 enemie level 0
-[75, 45, 150 ,10,50, 300 ,60  ,0,8 ,0  ,0 ,4 ], #5 more enemie level 0
-[75, 75, 300 ,15,80, 200 ,90  ,1,8 ,0  ,0 ,8 ], #6 enemie level 1 75*75
-[75, 75, 200 ,15,80, 400 ,120 ,1,8 ,0  ,0 ,8 ], #7 more enemie level 1 75*75
-[101,101,500 ,0, 100,300 ,200 ,2,12,100,20,16], #8 big level enemie level 2 101*101 holes and env_oxygen
-[201,201,2000,40,400,2000,300 ,3,20,0  ,0 ,50], #9 very big level enemie level 3 201*201 трудный лабиринт
-[201,201,9999,10,400,2000,1000,3,10,100,20,60], #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
+[21, 21, 30  ,0, 3 , 0   ,10  ,[0]      ,0 ,0  ,0 ,0 ], #0 easy test level, +energy
+[51, 45, 100 ,5 ,20, 0   ,10  ,[4]      ,0 ,0  ,0 ,0 ], #1 medium test level, +oxygen, affraid enemies
+[75, 45, 200 ,10,25, 0   ,20  ,[4]      ,0 ,0  ,0 ,0 ], #2 medium level, energy+oxygen, affraid enemies
+[75, 45, 100 ,10,40, 100 ,0   ,[0]      ,0 ,0  ,0 ,0 ], #3 moving blocks (сложный лабиринт)
+[75, 45, 200 ,10,50, 150 ,30  ,[0]      ,2 ,0  ,0 ,2 ], #4 enemie level 0
+[75, 45, 150 ,10,50, 300 ,60  ,[0]      ,8 ,0  ,0 ,4 ], #5 more enemie level 0
+[75, 75, 300 ,15,80, 200 ,90  ,[0,1]    ,8 ,0  ,0 ,8 ], #6 enemie level 1 75*75
+[75, 75, 200 ,15,80, 400 ,120 ,[0,1]    ,8 ,0  ,0 ,8 ], #7 more enemie level 1 75*75
+[101,101,500 ,0, 100,300 ,200 ,[0,1,2]  ,12,100,20,16], #8 big level enemie level 2 101*101 holes and env_oxygen
+[201,201,2000,40,400,2000,300 ,[0,1,2,3],20,0  ,0 ,50], #9 very big level enemie level 3 201*201 трудный лабиринт
+[201,201,9999,10,400,2000,1000,[0,1,2,3],10,100,20,60], #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
 # 10 - надо агрессию у врагов! патроны заканчиваются!
-[251,251,9999,50,400,3000,2000,3,30,0  ,0 ,200] #11 пока тестируется. Цель - убить большое количество врагов.
+[201,201,5000,50,500,3000,1000,[0,5]    ,30,0  ,0 ,100] #11 пока тестируется. Цель - убить большое количество врагов.
+# вылетает ошибка [Finished in 14.6s with exit code 3221225725]
 # 11 - Надо новый элемент, например оружие и апргейды на него. Базы: Телепорт, генераторы кислорода и энергии. 
 ]
-#0   1   2    3  4   5    6    7 8  9   10 11
+#0   1   2    3  4   5    6    7         8  9   10 11
 print(mazelevels)
 #лабиринты задают параметры при увеличении mazenumber
 #0 - grid_x
@@ -124,7 +129,7 @@ print(mazelevels)
 #4 - objects_energ
 #5 - objects_movingblock
 #6 - objects_enemy
-#7 - enemy_maxlevel
+#7 - enemy_maxlevel (list of enemy types)
 #8 - objects_health
 #9 - objects_hole
 #10 - concentration_oxygen
@@ -233,6 +238,15 @@ player_inventory=[
 #	2 - value, if 'WEAPON' - bullets количество пуль текущее, т.е. это small gun со 100 пулями
 #	3 - tick (current tick) - if 'WEAPON' max tick = weapons[0][4] cooldown , т.е. это значение растет за цикл, увеличиваясть до cooldown , после этого опять сбрасывается в 0 и можно снова выстрелить
 
+#sounds init:
+pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)#4096)
+sound=[]
+#звуки взяты на : https://freesound.org/
+sound.append(pygame.mixer.Sound('sounds/sound2.ogg')) #sound[0].play() small gun https://freesound.org/people/twisterman/sounds/163584/
+sound.append(pygame.mixer.Sound('sounds/sound4.ogg')) #sound[1].play() step
+#sound[0].play(loops=0,maxtime=400) - 1 time 0.4 sec 
+
+
 pygame.init()
 # to get the true full-screen size, do this BEFORE pygame.display.set_mode:
 fullscreen_sz = pygame.display.Info().current_w, pygame.display.Info().current_h
@@ -254,6 +268,12 @@ os.environ['SDL_VIDEO_WINDOW_POS'] = ''
 gameDisplay.fill(white)
 pygame.display.set_caption('лабиринт: дойди до конца, сброс - пробел')
 clock = pygame.time.Clock()
+
+#проиграть звук, номер звука, количество повторов, миллисекунды
+#звуки взяты на 
+def sound_start(soundnum,loop,msec):
+	if FLAG_SOUNDON:
+		sound[soundnum].play(loop,msec)
 
 #generate maze backpropagation:
 def make_maze(w,h):
@@ -361,7 +381,7 @@ def startobjects():
 		if objectsmaze[y*2+1][x*2+2]==0:
 			objectsmaze[y*2+1][x*2+2]=5
 			#print(count)
-			i=random.randrange(enemy_maxlevel+1) #случайный выбор уровня врагов
+			i=enemy_maxlevel[random.randrange(len(enemy_maxlevel))] #случайный выбор типа врагов из списка доступных типов для данного уровня
 			enemy[count]=[x*2+2,y*2+1,10,0,0,0,0,0,False,0,False] #enemy x,y,speed(act=10),act,state(random=0),type,heal,damage,killed, direction, FLAG_last_moved
 			enemy[count][2]=enemy_type[i][2] #speed
 			enemy[count][4]=enemy_type[i][4] #state
@@ -532,7 +552,7 @@ def enemy_move():
 				enemy[i][9]=newdirection
 				
 			#print(enemy_x,enemy_y,enemy[i][0],enemy[i][1])
-			if enemy_x==player_x and enemy_y==player_y:
+			if enemy_x==player_x and enemy_y==player_y: #столкновение с игроком
 				print('impact with player',enemy_x,enemy_y,player_x,player_y)
 				player_heal=player_heal-enemy[i][7] #урон от врага
 				enemy[i][6]=enemy[i][6]-player_damage #урон врагу
@@ -675,9 +695,9 @@ def displaymaze(activity):
 				enemy_y-=enemy_dy
 			if   k[5]==0:
 				gameDisplay.blit(zoomenemy1[image_index],(enemy_x,enemy_y))
-			elif k[5]==1:
+			elif k[5]==1 or k[5]==4:
 				gameDisplay.blit(zoomenemy2[image_index],(enemy_x,enemy_y))
-			elif k[5]==2:
+			elif k[5]==2 or k[5]==5:
 				gameDisplay.blit(zoomenemy3[image_index],(enemy_x,enemy_y))
 			elif k[5]==3:
 				gameDisplay.blit(zoomenemy4[image_index],(enemy_x,enemy_y))
@@ -749,6 +769,7 @@ def displayinfo():
 	pygame.draw.rect(gameDisplay, white, (0,display_y,display_x,info_height)) #закрашивает и сканнер тоже
 	pygame.draw.rect(gameDisplay, blue, (2,display_y+2,display_x-4,info_height-5),2)
 	myfont = pygame.font.SysFont(font_def,20)
+	#left info
 	mytext = myfont.render('environment oxygen: '+str(maze_oxygen[player_y][player_x]),True,black)
 	gameDisplay.blit(mytext,(10,display_y))
 	mytext = myfont.render('maze number: '+str(mazenumber), True, black)
@@ -770,6 +791,7 @@ def displayinfo():
 	gameDisplay.blit(mytext,(10,display_y+140))
 	mytext = myfont.render('player heal: '+str(player_heal),True,black)
 	gameDisplay.blit(mytext,(10,display_y+160))
+	#middle info
 	mytext = myfont.render('player bullets: '+str(player_inventory[player_inventory[0]][2]),True,black)
 	gameDisplay.blit(mytext,(300,display_y+20))
 	mytext = myfont.render('player weapon: '+str(weapons[player_inventory[player_inventory[0]][1]][7]),True,black)
@@ -1304,7 +1326,7 @@ def gameloop():
 	global enemy
 	global env_speed, maze_oxygen
 	global player_direction, player_last_move
-	global FLAG_SCANNER
+	global FLAG_SCANNER, FLAG_SOUNDON
 	global player_inventory
 	global player_bullets
 	global player_display_x, player_display_y
@@ -1325,6 +1347,7 @@ def gameloop():
 					player_action['MOVE']+=1
 					player_x+=1
 					maze_fog_update(player_x,player_y)
+					sound_start(1,0,200) #включить звук шага(sound[1]) один раз (0), на 0.155сек (155)
 					#continue
 				elif maze_objects[player_y][player_x+1]==5:#справа враг
 					act=['MOVE ON ENEMY',cooldown['MOVE ON ENEMY']-player_speed]
@@ -1355,6 +1378,7 @@ def gameloop():
 					player_action['MOVE']+=1
 					player_x-=1
 					maze_fog_update(player_x,player_y)
+					sound_start(1,0,200) #включить звук шага(sound[1]) один раз (0), на 0.155сек (155)
 					#continue
 				elif maze_objects[player_y][player_x-1]==5:#справа враг
 					act=['MOVE ON ENEMY',cooldown['MOVE ON ENEMY']-player_speed]
@@ -1385,6 +1409,7 @@ def gameloop():
 					player_action['MOVE']+=1
 					player_y-=1
 					maze_fog_update(player_x,player_y)
+					sound_start(1,0,200) #включить звук шага(sound[1]) один раз (0), на 0.155сек (155)
 					#continue
 				elif maze_objects[player_y-1][player_x]==5:#справа враг
 					act=['MOVE ON ENEMY',cooldown['MOVE ON ENEMY']-player_speed]
@@ -1415,6 +1440,7 @@ def gameloop():
 					player_action['MOVE']+=1
 					player_y+=1
 					maze_fog_update(player_x,player_y)
+					sound_start(1,0,200) #включить звук шага(sound[1]) один раз (0), на 0.155сек (155)
 					#continue
 				elif maze_objects[player_y+1][player_x]==5:#справа враг
 					act=['MOVE ON ENEMY',cooldown['MOVE ON ENEMY']-player_speed]
@@ -1470,7 +1496,8 @@ def gameloop():
 				player_inventory[player_inventory[0]][3]=0 #сбросить счетчик tick
 				if player_inventory[player_inventory[0]][2]>0:
 					print('fire')
-					weapon_fire() #сделать выстрел, потратить пулю в оружии, создать пулю
+					sound_start(0,0,500) #включить звук выстрела(sound[0]) один раз (0), на 0.3сек (300)
+					weapon_fire() #сделать выстрел, потратить пулю в оружии, создать пулю					
 				else: print('no bullets')
 
 		for event in pygame.event.get():
@@ -1509,6 +1536,8 @@ def gameloop():
 						zoomindex=zoomsize.index(cellsize)
 						if zoomindex<len(zoomsize)-1:
 							cellsize=zoomsize[zoomindex+1]
+					if event.key == pygame.K_F11:#sound on/off
+						FLAG_SOUNDON=not(FLAG_SOUNDON)
 					
 		#gameDisplay.fill(white) #fill display - убрал, так как в displayinfo() заливается нижняя часть белым цветом
 		displaymaze(act) #display maze

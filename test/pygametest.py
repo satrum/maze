@@ -86,6 +86,15 @@ print (a)
 
 print (abs(-1))
 
+
+#sound
+pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
+sound=[]
+sound.append(pygame.mixer.Sound('sounds/sound2.ogg'))
+sound[0].play(0,500)
+print('gl:',sound[0].get_length())
+#print(sound[0].get_raw())
+
 # test 'a' get_pressed()
 clock = pygame.time.Clock()
 act=['',0]
