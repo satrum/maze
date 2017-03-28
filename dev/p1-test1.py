@@ -70,15 +70,16 @@ enemy_maxlevel=[0]
 #убрать генерацию в функцию startobjects()
 #enemy=[[] for i in range(objects_enemy)]
 enemy_type=[
-[0,0,10,0,2,0,5,2 ,False], #0 heal=5 damage=2 cooldown=10 state - agressive zoomenemy1 
-[0,0,5 ,0,0,1,2,10,False], #1 heal=2 damage=10 cooldown=5 state - random move zoomenemy2 
-[0,0,20,0,0,2,4,10,False], #2 heal=4 damage=10 cooldown=20 state - random move zoomenemy3
-[0,0,30,0,0,3,6,15,False], #3 heal=6 damage=15 cooldown=30 state - random move zoomenemy4
+[0,0,10,0,2,0,5 ,2 ,False], #0 heal=5 damage=2 cooldown=10 state - agressive zoomenemy1 
+[0,0,5 ,0,0,1,2 ,10,False], #1 heal=2 damage=10 cooldown=5 state - random move zoomenemy2 
+[0,0,20,0,0,2,4 ,10,False], #2 heal=4 damage=10 cooldown=20 state - random move zoomenemy3
+[0,0,30,0,0,3,6 ,15,False], #3 heal=6 damage=15 cooldown=30 state - random move zoomenemy4
 
-[0,0,5 ,0,3,4,2,10,False], #4 heal=2 damage=10 cooldown=5 state - affraid move zoomenemy2
-[0,0,20,0,2,5,4,10,False], #5 heal=4 damage=10 cooldown=20 state - agressive move zoomenemy3
+[0,0,5 ,0,3,4,2 ,10,False], #4 heal=2 damage=10 cooldown=5 state - affraid move zoomenemy2
+[0,0,20,0,2,5,4 ,10,False], #5 heal=4 damage=10 cooldown=20 state - agressive move zoomenemy3
+[0,0,15,0,2,6,50,10,False,'BIG DOG ROBOT']  #6 heal=50 damage=10 cooldown=20 state - agressive move zoomenemy5 BOSS for 7 level
 ]
-#0 1 2  3 4 5 6 7  8
+#0 1 2  3 4 5 6  7  8
 #0 - x
 #1 - y
 #2 - speed(10 act)
@@ -88,6 +89,7 @@ enemy_type=[
 #6 - здоровье
 #7 - урон от столкновения
 #8 - killed (False, True)
+#9 - name of enemy type for 'BOSS'
 # only in enemy list (init in startobjects() :
 #9 - 0,1,2 or 3 move: enemy_move() - dirarray)
 #10 - FLAG enemy moved (False or True)
@@ -110,7 +112,7 @@ mazelevels=[
 [75, 45, 200 ,10,50, 150 ,30  ,[0]      ,2 ,0  ,0 ,2 ], #4 enemie level 0
 [75, 45, 150 ,10,50, 300 ,60  ,[0]      ,8 ,0  ,0 ,4 ], #5 more enemie level 0
 [75, 75, 300 ,15,80, 200 ,90  ,[0,1]    ,8 ,0  ,0 ,8 ], #6 enemie level 1 75*75
-[75, 75, 200 ,15,80, 400 ,120 ,[0,1]    ,8 ,0  ,0 ,8 ], #7 more enemie level 1 75*75
+[75, 75, 200 ,15,80, 400 ,120 ,[0,1]    ,8 ,0  ,0 ,12], #7 more enemie level 1 75*75 + boss
 [101,101,500 ,0, 100,300 ,200 ,[0,1,2]  ,12,100,20,16], #8 big level enemie level 2 101*101 holes and env_oxygen
 [201,201,2000,40,400,2000,300 ,[0,1,2,3],20,0  ,0 ,50], #9 very big level enemie level 3 201*201 трудный лабиринт
 [201,201,9999,10,400,2000,1000,[0,1,2,3],10,100,20,60], #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
@@ -135,6 +137,25 @@ print(mazelevels)
 #10 - concentration_oxygen
 #11 - objects_ammo (small gun 50 bullets)
 #пока нет, но надо:  oxygen env flag on/off (просчитывать ли вообще кислород или он в нуле), oxygen generator, bullet(small gun)
+mazelevels_target=[
+{'GOTO': [0,1,21-1,21-2]  ,'KILL': 5,   'PICK': 0, 'BOSS':0, 'TEXT':'small level with energy and agressive enemies, kill 5 enemy!'}, #0
+{'GOTO': [0,1,51-1,45-2]  ,'KILL': 1,   'PICK': 0, 'BOSS':0, 'TEXT':'small level with oxygen, enemies are running away'}, #1
+{'GOTO': [0,1,75-1,45-2]  ,'KILL': 2,   'PICK': 0, 'BOSS':0, 'TEXT':'medium level with oxygen, enemies are running away'}, #2
+{'GOTO': [0,1,75-1,45-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'complex medium level with moving blocks'}, #3
+{'GOTO': [0,1,75-1,45-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'medium level with agressive enemies and ammo for gun'}, #4
+{'GOTO': [0,1,75-1,45-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'complex medium level with more agressive enemies'}, #5
+{'GOTO': [0,1,75-1,75-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'big level with 2 types of enemies'}, #6
+{'GOTO': [0,1,75-1,75-2]  ,'KILL': 30,  'PICK': 0, 'BOSS':6, 'TEXT':'complex big level with 2 types of enemies and BOSS'}, #7
+{'GOTO': [0,1,101-1,101-2],'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'very big level with 3 types of enemies and oxygen environment'}, #8
+{'GOTO': [0,1,201-1,201-2],'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'super level with 4 types of enemies and oxygen environment'}, #9
+{'GOTO': [0,1,201-1,201-2],'KILL': 100, 'PICK': 0, 'BOSS':0, 'TEXT':'open super level with 4 types of enemies, kill 100 enemy!'}, #10
+{'GOTO': [0,1,201-1,201-2],'KILL': 200, 'PICK': 0, 'BOSS':0, 'TEXT':'super level with 2 types of agressive enemies, kill 200 enemy!'} #11
+]
+#GOTO - start and level complete player position
+#KILL - need to kill enemies for level complete
+#PICK - need to pick all objects with type (0 - no PICK) to level complete
+#BOSS - need to kill BOSS with type in enemy_type (0 - no BOSS) to level complete
+#TEXT - level discription
 
 #среды:
 maze_oxygen=[[]] #кислород, концентрация
@@ -243,7 +264,7 @@ pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)#4096)
 sound=[]
 #звуки взяты на : https://freesound.org/
 sound.append(pygame.mixer.Sound('sounds/sound2.ogg')) #sound[0].play() small gun https://freesound.org/people/twisterman/sounds/163584/
-sound.append(pygame.mixer.Sound('sounds/sound4.ogg')) #sound[1].play() step
+sound.append(pygame.mixer.Sound('sounds/sound4.ogg')) #sound[1].play() step https://freesound.org/people/Reitanna/sounds/323737/
 #sound[0].play(loops=0,maxtime=400) - 1 time 0.4 sec 
 
 
@@ -266,7 +287,7 @@ os.environ['SDL_VIDEO_WINDOW_POS'] = ''
 # every time pygame.display.set_mode() gets called due to a VIDEORESIZE event.
 # ----------------------------------------------------------------------------
 gameDisplay.fill(white)
-pygame.display.set_caption('лабиринт: дойди до конца, сброс - пробел')
+pygame.display.set_caption('SPACE STATION DUNGEON')
 clock = pygame.time.Clock()
 
 #проиграть звук, номер звука, количество повторов, миллисекунды
@@ -375,6 +396,12 @@ def startobjects():
 			count-=1
 	count=0 # генерация врагов в коридорах
 	enemy=[[] for i in range(objects_enemy)]
+	#test BOSS:
+	current_level=mazenumber
+	j=len(mazelevels) #длина массива уровней
+	if current_level>=j: current_level=j-1 #уровень не превышает последний
+	boss_level=mazelevels_target[current_level]['BOSS']
+	#generate random enemies:
 	while count<objects_enemy:
 		x=random.randrange(int((grid_x-1)/2)-1)
 		y=random.randrange(int((grid_y-1)/2))
@@ -382,6 +409,8 @@ def startobjects():
 			objectsmaze[y*2+1][x*2+2]=5
 			#print(count)
 			i=enemy_maxlevel[random.randrange(len(enemy_maxlevel))] #случайный выбор типа врагов из списка доступных типов для данного уровня
+			if boss_level>0 and count==0: #test first enemy and BOSS on level
+				i=boss_level
 			enemy[count]=[x*2+2,y*2+1,10,0,0,0,0,0,False,0,False] #enemy x,y,speed(act=10),act,state(random=0),type,heal,damage,killed, direction, FLAG_last_moved
 			enemy[count][2]=enemy_type[i][2] #speed
 			enemy[count][4]=enemy_type[i][4] #state
@@ -701,6 +730,8 @@ def displaymaze(activity):
 				gameDisplay.blit(zoomenemy3[image_index],(enemy_x,enemy_y))
 			elif k[5]==3:
 				gameDisplay.blit(zoomenemy4[image_index],(enemy_x,enemy_y))
+			elif k[5]==6:
+				gameDisplay.blit(zoomenemy5[image_index],(enemy_x,enemy_y))
 			enemy_heal=int(k[6]*cellsize/enemy_type[ k[5] ][6]) #расчет процента здоровья врага
 			pygame.draw.line(gameDisplay, red, (enemy_x,enemy_y),(enemy_x+enemy_heal,enemy_y))
 	#print ('count display enemy by tick:'+str(enemy_display_count)) #print count of displayed enemies
@@ -856,6 +887,7 @@ def pause_game():
 	TextSurf, TextRect = text_objects("Paused", largeText)
 	TextRect.center = ((display_x/2),(display_y/2))
 	gameDisplay.blit(TextSurf, TextRect)'''
+	display_level_target()
 	while pausegame:
 		for event in pygame.event.get():
 			#print(event)
@@ -864,7 +896,7 @@ def pause_game():
 				quit()
 		#gameDisplay.fill(white)
 		display_button("Continue",display_x//2-75,display_y//2,150,50,green,bright_green,unpause_game)
-		#display_button("Start Game",display_x//2-75,display_y//2+60,150,50,green,bright_green,main_menu)
+		display_button("Reset Level",display_x//2-75,display_y//2+60,150,50,green,bright_green,main_menu)
 		display_button("Quit",display_x//2-75,display_y//2+120,150,50,red,bright_red,quit_game)
 		pygame.display.update()
 		clock.tick(10)
@@ -978,6 +1010,18 @@ def startover():
 	pygame.display.update()
 	pygame.time.wait(100)
 
+#initialize level
+def startlevel():
+	global maze, maze_objects, maze_oxygen
+	#init:
+	mazelevels_update(mazenumber) #считывание глобальных параметров уровня
+	maze=startmaze() #generate maze
+	maze_objects=startobjects() #generate array of objects
+	initplayer() #init to default player with upgrades and fog
+	maze_fog_update(player_x,player_y) #update fog at player position
+	maze_oxygen=start_env(concentration_oxygen) #generate oxygen
+	gameloop() #begin play game on level
+
 #load player from file in main menu, or from network
 def loadplayer():
 	global mazenumber, player_expirience, maze, maze_objects, player_upgrades,maze_oxygen,player_inventory
@@ -997,12 +1041,15 @@ def loadplayer():
 		print(player_inventory,type(player_inventory))
 		print('загружен прогресс')
 		#init:
+		#startlevel()
+		'''
 		mazelevels_update(mazenumber) #считывание глобальных параметров уровня
 		maze=startmaze() #generate maze
 		maze_objects=startobjects() #generate array of objects
 		initplayer() #init to default player and fog
 		maze_fog_update(player_x,player_y) #update fog
 		maze_oxygen=start_env(concentration_oxygen) #generate oxygen
+		'''
 		main_menu() #return to main menu
 
 #save player to file in main menu, or from network
@@ -1030,6 +1077,9 @@ def upgradeplayer():
 	#print(player_upgrades['ENERGY_MAX'], len(upgrades['ENERGY_MAX'])-1, player_expirience, upgrades['EXP'][player_upgrades['ENERGY_MAX']+1])
 	upgrade_name=''
 	#print(type(player_expirience))
+	#reset energy, oxygen, health of player
+	initplayer()
+
 	while True:
 		#pygame.draw.rect(gameDisplay, black, (50,50,250,400))
 		gameDisplay.blit(zoomstartoverimg,(0,0))
@@ -1130,6 +1180,36 @@ def helpscreen():
 		pygame.display.update()
 		clock.tick(10)
 
+#display level discription:
+def display_level_target():
+	#параметры и описание уровня:
+	pygame.draw.rect(gameDisplay,black,(35,35,600,250))
+	pygame.draw.rect(gameDisplay,green,(35,35,600,250),1)
+	i=len(mazelevels) #длина массива уровней
+	current_level=mazenumber
+	if current_level>=i: current_level=i-1 #уровень не превышает последний
+	myfont = pygame.font.SysFont(font_def,20)
+	mytext = myfont.render('X SIZE:'+str(mazelevels[current_level][0]), True, white)
+	gameDisplay.blit(mytext,(40,40))
+	mytext = myfont.render('Y SIZE:'+str(mazelevels[current_level][1]), True, white)
+	gameDisplay.blit(mytext,(240,40))
+	if mazelevels[current_level][6]==0:
+		txt_1='NO ENEMIES'
+	else: txt_1='ENEMIES ON LEVEL'
+	mytext = myfont.render(txt_1, True, white)
+	gameDisplay.blit(mytext,(40,80))
+	if mazelevels[current_level][10]>0:
+		mytext = myfont.render('OXYGEN DENCITY:'+str(mazelevels[current_level][10]), True, white)
+		gameDisplay.blit(mytext,(40,120))
+	mytext = myfont.render(mazelevels_target[current_level]['TEXT'], True, white)
+	gameDisplay.blit(mytext,(40,160))
+	if mazelevels_target[current_level]['KILL']>0:
+		mytext = myfont.render('NEED TO KILL:'+str(mazelevels_target[current_level]['KILL']), True, white)
+		gameDisplay.blit(mytext,(40,200))
+	if mazelevels_target[current_level]['BOSS']>0:
+		mytext = myfont.render('BOSS ON LEVEL:'+str(enemy_type[ mazelevels_target[current_level]['BOSS'] ][9]), True, white)
+		gameDisplay.blit(mytext,(40,240))
+
 #menu before start gameloop
 def main_menu():
 	startover() #нарисовать картинку на весь экран
@@ -1140,6 +1220,7 @@ def main_menu():
 	gameDisplay.blit(mytext,((display_x-mytext.get_width())//2,display_y//2-100))
 	mytext = myfont.render('EXPIRIENCE:'+str(player_expirience), True, white)
 	gameDisplay.blit(mytext,((display_x-mytext.get_width())//2,display_y//2-75))
+	display_level_target()
 	pygame.display.update()
 	#нарисовать количество опыта
 	menu=True
@@ -1151,11 +1232,11 @@ def main_menu():
 				quit()
 		#gameDisplay.fill(white)
 		if mazenumber>0:
-			display_button("Continue",display_x//2-75,display_y//2,150,50,green,bright_green,gameloop) #1
+			display_button("Continue",display_x//2-75,display_y//2,150,50,green,bright_green,startlevel) #1
 			display_button("Save Player",display_x//2-75,display_y//2+180,150,50,green,bright_green,saveplayer) #4
 			display_button("Upgrade Player",display_x//2-75,display_y//2+240,150,50,green,bright_green,upgradeplayer) #5
 		if mazenumber==0:
-			display_button("Start Game",display_x//2-75,display_y//2,150,50,green,bright_green,gameloop) #1
+			display_button("Start Game",display_x//2-75,display_y//2,150,50,green,bright_green,startlevel) #1
 		display_button("Quit",display_x//2-75,display_y//2+60,150,50,red,bright_red,quit_game) #2
 		display_button("Load Player",display_x//2-75,display_y//2+120,150,50,green,bright_green,loadplayer) #3
 		display_button("Help",display_x//2-75,display_y//2+300,150,50,green,bright_green,helpscreen) #6
@@ -1248,6 +1329,8 @@ enemyimg3 = pygame.image.load('enemy7.png').convert()
 zoomenemy3=[pygame.transform.smoothscale(enemyimg3,(size,size)) for size in zoomsize]
 enemyimg4 = pygame.image.load('enemy4.png').convert()
 zoomenemy4=[pygame.transform.smoothscale(enemyimg4,(size,size)) for size in zoomsize]
+enemyimg5 = pygame.image.load('enemy5.png').convert()
+zoomenemy5=[pygame.transform.smoothscale(enemyimg5,(size,size)) for size in zoomsize]
 health = pygame.image.load('health1.png').convert()
 zoomhealth=[pygame.transform.scale(health,(size,size)) for size in zoomsize]
 hole = pygame.image.load('hole1.png').convert()
@@ -1276,6 +1359,7 @@ for i in range(len(zoomsize)):
 	zoomenemy2[i].set_colorkey((0x000000))
 	zoomenemy3[i].set_colorkey((0x000000))
 	zoomenemy4[i].set_colorkey((0x000000)) #black
+	zoomenemy5[i].set_colorkey((0x000000)) #black
 	zoomhealth[i].set_colorkey((4147404))
 	zoomenergy[i].set_colorkey((15539236)) #red
 	zoomoxygen[i].set_colorkey((16777215)) #white
@@ -1299,9 +1383,11 @@ zoomscanner=pygame.Surface((info_height,info_height)) #заранее готов
 #zoomscreen=pygame.transform.smoothscale(screen,(display_x,display_y))
 
 
-#main loop:
+
 startover() #start splash screen 1 second
 #gameDisplay.fill(white) #fill display
+#startlevel()
+'''
 mazelevels_update(mazenumber) #update level global parameters
 maze=startmaze() #generate maze
 maze_objects=startobjects() #generate array of objects
@@ -1309,14 +1395,16 @@ maze_objects=startobjects() #generate array of objects
 #mazenumber+=1	#calculate count of maze generation and write count in console and display
 initplayer()	#reset player settings to default
 maze_fog_update(player_x,player_y)	#update fog of war in player position
-
 maze_oxygen=start_env(concentration_oxygen) #generate oxygen in maze in empty place
 #maze_oxygen=next_env(maze_oxygen) #next step oxygen stream
+'''
 #tests
 #print(maze)
 #print(maze_objects)
 
 
+
+#main game play loop:
 def gameloop():
 	#global act
 	global player_action,player_x,player_y,player_oxygen,player_energy,player_expirience,player_heal,player_upgrades
@@ -1333,6 +1421,15 @@ def gameloop():
 	act=['',0] #действие игрока текущее и длительность в тиках
 	#act['MOVE',10]
 	#act['MOVE BLOCK',15]
+	current_level=mazenumber
+	i=len(mazelevels) #длина массива уровней
+	if current_level>=i: current_level=i-1 #уровень не превышает последний
+	x_complete=mazelevels_target[current_level]['GOTO'][2]
+	y_complete=mazelevels_target[current_level]['GOTO'][3]
+	kill_complete=mazelevels_target[current_level]['KILL']
+	boss_complete=mazelevels_target[current_level]['BOSS']
+	print('goto x:'+str(x_complete)+' y:'+str(y_complete)+' kill:'+str(kill_complete)+' boss:'+str(boss_complete))
+
 	while True:
 		#startcicle=time.clock() #timer test
 		keypressed=pygame.key.get_pressed()
@@ -1509,13 +1606,16 @@ def gameloop():
 			if event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_SPACE:#генерировать новый лабиринт
 						mazenumber+=1	#calculate count of maze generation and write count in console and display
+						main_menu()
+						'''
 						mazelevels_update(mazenumber)
 						maze=startmaze() #generate maze
 						maze_objects=startobjects() #generate array of objects
 						initplayer()	#reset player settings to default
 						maze_fog_update(player_x,player_y)	#update fog of war in player position
 						maze_oxygen=start_env(concentration_oxygen) #generate oxygen
-						print ('концентрация кислорода: ',concentration_oxygen)
+						'''
+						#print ('концентрация кислорода: ',concentration_oxygen)
 					if event.key == pygame.K_f:#on/off fog of war
 						FLAG_FOG=not(FLAG_FOG)
 					if event.key == pygame.K_m:#on/off minimap (scanner, radar)
@@ -1579,30 +1679,42 @@ def gameloop():
 				player_action['PICK']+=1
 
 		#test level complete:
-		if player_x==grid_x-1 and player_y==grid_y-2: #game complete, reset game and player
-			mazenumber+=1
-			update_expirience()
-			mazelevels_update(mazenumber) #считывание глобальных параметров уровня
-			maze=startmaze()
-			maze_objects=startobjects() #generate array of objects
-			initplayer()
-			maze_fog_update(player_x,player_y)
-			maze_oxygen=start_env(concentration_oxygen) #generate oxygen
-			main_menu()
+		#test GOTO and KILL complete
+		#if player_x==grid_x-1 and player_y==grid_y-2: #game complete, reset game and player
+		if player_x==x_complete and player_y==y_complete:
+			if boss_complete>0 and enemy[0][8]==True: #если есть босс и он убит (босс всегда генериться нулевым в списке врагов)
+				boss_complete=0 #сбросить уромень босса в 0 - т.е. босса нет
+			if kill_complete<=player_action['KILL'] and boss_complete==0: #если убито достаточно врагов и босса нет
+				mazenumber+=1
+				update_expirience()
+				#startlevel()
+				'''
+				mazelevels_update(mazenumber) #считывание глобальных параметров уровня
+				maze=startmaze()
+				maze_objects=startobjects() #generate array of objects
+				initplayer()
+				maze_fog_update(player_x,player_y)
+				maze_oxygen=start_env(concentration_oxygen) #generate oxygen
+				'''
+				main_menu()
+			else:player_x-=1
 		#test game over:
 		if player_oxygen<=0 or player_energy<=0 or player_heal<=0:
 			gameover() #надпись game over
 			player_expirience=0 #сброс накопленного опыта
 			mazenumber=0 #сброс на начальный уровень
+			player_upgrades={'EXP':0,'ENERGY_MAX':0,'OXYGEN_MAX':0,'HEALTH_MAX':0,'SPEED_TICK':0,'FOG_RADIUS':0,'MELEE_DAMAGE':0,'OXYGEN_TIME':0,'OXYGEN_ENERGY':0,'BULLETS_MAX':0}
+			player_inventory=[1,['WEAPON',0,0,0]]
+			#startlevel()
+			'''
 			mazelevels_update(mazenumber) #считывание глобальных параметров уровня
 			#update_expirience()
 			maze=startmaze()
 			maze_objects=startobjects() #generate array of objects
-			player_upgrades={'EXP':0,'ENERGY_MAX':0,'OXYGEN_MAX':0,'HEALTH_MAX':0,'SPEED_TICK':0,'FOG_RADIUS':0,'MELEE_DAMAGE':0,'OXYGEN_TIME':0,'OXYGEN_ENERGY':0,'BULLETS_MAX':0}
-			player_inventory=[1,['WEAPON',0,0,0]]
 			initplayer()
 			maze_fog_update(player_x,player_y)
 			maze_oxygen=start_env(concentration_oxygen) #generate oxygen
+			'''
 			main_menu()
 		
 		#bullets fly cicle
