@@ -115,7 +115,7 @@ mazelevels=[
 [75, 75, 200 ,15,80, 400 ,120 ,[0,1]    ,8 ,0  ,0 ,12], #7 more enemie level 1 75*75 + boss
 [101,101,500 ,0, 100,300 ,200 ,[0,1,2]  ,12,100,20,16], #8 big level enemie level 2 101*101 holes and env_oxygen
 [201,201,2000,40,400,2000,300 ,[0,1,2,3],20,0  ,0 ,50], #9 very big level enemie level 3 201*201 трудный лабиринт
-[201,201,9999,10,400,2000,1000,[0,1,2,3],10,100,20,60], #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
+[201,201,9999,10,400,2000,1000,[0,1,2,3],10,100,20,80], #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
 # 10 - надо агрессию у врагов! патроны заканчиваются!
 [201,201,5000,50,500,3000,1000,[0,5]    ,30,0  ,0 ,100] #11 пока тестируется. Цель - убить большое количество врагов.
 # вылетает ошибка [Finished in 14.6s with exit code 3221225725]
@@ -147,8 +147,8 @@ mazelevels_target=[
 {'GOTO': [0,1,75-1,75-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'big level with 2 types of enemies'}, #6
 {'GOTO': [0,1,75-1,75-2]  ,'KILL': 30,  'PICK': 0, 'BOSS':6, 'TEXT':'complex big level with 2 types of enemies and BOSS'}, #7
 {'GOTO': [0,1,101-1,101-2],'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'very big level with 3 types of enemies and oxygen environment'}, #8
-{'GOTO': [0,1,201-1,201-2],'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'super level with 4 types of enemies and oxygen environment'}, #9
-{'GOTO': [0,1,201-1,201-2],'KILL': 100, 'PICK': 0, 'BOSS':0, 'TEXT':'open super level with 4 types of enemies, kill 100 enemy!'}, #10
+{'GOTO': [0,1,201-1,201-2],'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'super level with 4 types of enemies'}, #9
+{'GOTO': [0,1,201-1,201-2],'KILL': 100, 'PICK': 0, 'BOSS':0, 'TEXT':'open super level with 4 types of enemies and oxygen, kill 100 enemy!'}, #10
 {'GOTO': [0,1,201-1,201-2],'KILL': 200, 'PICK': 0, 'BOSS':0, 'TEXT':'super level with 2 types of agressive enemies, kill 200 enemy!'} #11
 ]
 #GOTO - start and level complete player position
@@ -222,7 +222,8 @@ print('upgraded player: ',player_energy, player_oxygen, player_heal, player_dama
 
 #fire:
 weapons=[
-	[0,0,1,5,10,50,200,'small gun','gun1.png','bullet1.png']
+	[0,0,1,5,5,50,200,'small gun','gun1.png','bullet1.png'] #[0,0,1,5,10,50,200,'small gun','gun1.png','bullet1.png']
+	#test minigun
 ]
 #weapons:
 #		0 - типы вооружения (type(номер типа) = index in list
@@ -1589,7 +1590,7 @@ def gameloop():
 			if pos_dx<0 and pos_dy>0 and abs(pos_dx)<pos_dy: player_direction='DOWN'
 			#fire:
 			current_weapon=player_inventory[player_inventory[0]][1] #тип оружия
-			if player_inventory[player_inventory[0]][3]==weapons[current_weapon][4]: #если достигло cooldown
+			if player_inventory[player_inventory[0]][3]>=weapons[current_weapon][4]: #если достигло cooldown
 				player_inventory[player_inventory[0]][3]=0 #сбросить счетчик tick
 				if player_inventory[player_inventory[0]][2]>0:
 					print('fire')
