@@ -58,7 +58,7 @@ zoomenergy=pygame.transform.rotate(zoomenergy,90)
 zoomenergy_array=pygame.PixelArray(zoomenergy)
 print(zoomenergy_array)
 del zoomenergy_array
-zoomenergy.set_colorkey((0))
+zoomenergy.set_colorkey((16777215))
 gameDisplay.blit(zoomenergy,(400,300))
 
 
