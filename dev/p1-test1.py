@@ -107,7 +107,7 @@ mazenumber=0 #count of maze generation
 mazelevels=[
 [21, 21, 30  ,0, 3 , 0   ,10  ,[0]      ,0 ,0  ,0 ,0 ], #0 easy test level, +energy
 [51, 45, 100 ,5 ,20, 0   ,10  ,[4]      ,0 ,0  ,0 ,0 ], #1 medium test level, +oxygen, affraid enemies
-[75, 45, 200 ,10,25, 0   ,20  ,[4]      ,0 ,0  ,0 ,0 ], #2 medium level, energy+oxygen, affraid enemies
+[75, 45, 200 ,10,40, 0   ,20  ,[4]      ,0 ,0  ,0 ,2 ], #2 medium level, energy+oxygen, affraid enemies
 [75, 45, 100 ,10,40, 100 ,0   ,[0]      ,0 ,0  ,0 ,0 ], #3 moving blocks (сложный лабиринт)
 [75, 45, 200 ,10,50, 150 ,30  ,[0]      ,2 ,0  ,0 ,2 ], #4 enemie level 0
 [75, 45, 150 ,10,50, 300 ,60  ,[0]      ,8 ,0  ,0 ,4 ], #5 more enemie level 0
@@ -138,20 +138,21 @@ print(mazelevels)
 #11 - objects_ammo (small gun 50 bullets)
 #пока нет, но надо:  oxygen env flag on/off (просчитывать ли вообще кислород или он в нуле), oxygen generator, bullet(small gun)
 mazelevels_target=[
+#[0,1,21-1,21-2] 0 level START/EXIT test: [0,0,0   ,0   ]
 {'GOTO': [0,1,21-1,21-2]  ,'KILL': 5,   'PICK': 0, 'BOSS':0, 'TEXT':'small level with energy and agressive enemies, kill 5 enemy!'}, #0
-{'GOTO': [0,1,51-1,45-2]  ,'KILL': 1,   'PICK': 0, 'BOSS':0, 'TEXT':'small level with oxygen, enemies are running away'}, #1
-{'GOTO': [0,1,75-1,45-2]  ,'KILL': 2,   'PICK': 0, 'BOSS':0, 'TEXT':'medium level with oxygen, enemies are running away'}, #2
-{'GOTO': [0,1,75-1,45-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'complex medium level with moving blocks'}, #3
-{'GOTO': [0,1,75-1,45-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'medium level with agressive enemies and ammo for gun'}, #4
-{'GOTO': [0,1,75-1,45-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'complex medium level with more agressive enemies'}, #5
-{'GOTO': [0,1,75-1,75-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'big level with 2 types of enemies'}, #6
-{'GOTO': [0,1,75-1,75-2]  ,'KILL': 30,  'PICK': 0, 'BOSS':6, 'TEXT':'complex big level with 2 types of enemies and BOSS'}, #7
-{'GOTO': [0,1,101-1,101-2],'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'very big level with 3 types of enemies and oxygen environment'}, #8
-{'GOTO': [0,1,201-1,201-2],'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'super level with 4 types of enemies'}, #9
-{'GOTO': [0,1,201-1,201-2],'KILL': 100, 'PICK': 0, 'BOSS':0, 'TEXT':'open super level with 4 types of enemies and oxygen, kill 100 enemy!'}, #10
-{'GOTO': [0,1,201-1,201-2],'KILL': 200, 'PICK': 0, 'BOSS':0, 'TEXT':'super level with 2 types of agressive enemies, kill 200 enemy!'} #11
+{'GOTO': [0,1,51-2,45-2]  ,'KILL': 1,   'PICK': 0, 'BOSS':0, 'TEXT':'small level with oxygen, enemies are running away'}, #1
+{'GOTO': [0,1,0,0      ]  ,'KILL': 1,   'PICK': 0, 'BOSS':0, 'TEXT':'medium level with oxygen, enemies are running away, find EXIT'}, #2
+{'GOTO': [0,1,75-2,45-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'complex medium level with moving blocks'}, #3
+{'GOTO': [0,1,75-2,45-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'medium level with agressive enemies and ammo for gun'}, #4
+{'GOTO': [0,1,75-2,45-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'complex medium level with more agressive enemies'}, #5
+{'GOTO': [0,1,75-2,75-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'big level with 2 types of enemies'}, #6
+{'GOTO': [0,1,75-2,75-2]  ,'KILL': 30,  'PICK': 0, 'BOSS':6, 'TEXT':'complex big level with 2 types of enemies and BOSS'}, #7
+{'GOTO': [0,1,101-2,101-2],'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'very big level with 3 types of enemies and oxygen environment'}, #8
+{'GOTO': [0,1,201-2,201-2],'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'super level with 4 types of enemies'}, #9
+{'GOTO': [0,1,201-2,201-2],'KILL': 100, 'PICK': 0, 'BOSS':0, 'TEXT':'open super level with 4 types of enemies and oxygen, kill 100 enemy!'}, #10
+{'GOTO': [0,1,201-2,201-2],'KILL': 200, 'PICK': 0, 'BOSS':0, 'TEXT':'super level with 2 types of agressive enemies, kill 200 enemy!'} #11
 ]
-#GOTO - start and level complete player position
+#GOTO - start and level complete player position. If [0,0,*,*] or [*,*,0,0] - generate START or EXIT points random
 #KILL - need to kill enemies for level complete
 #PICK - need to pick all objects with type (0 - no PICK) to level complete
 #BOSS - need to kill BOSS with type in enemy_type (0 - no BOSS) to level complete
@@ -222,8 +223,8 @@ print('upgraded player: ',player_energy, player_oxygen, player_heal, player_dama
 
 #fire:
 weapons=[
-	[0,0,1,5,5,50,200,'small gun','gun1.png','bullet1.png'] #[0,0,1,5,10,50,200,'small gun','gun1.png','bullet1.png']
-	#test minigun
+	[0,0,1,5,10,50,200,'small gun','gun1.png','bullet1.png'] #[0,0,1,5,10,50,200,'small gun','gun1.png','bullet1.png']
+	#test minigun [0,0,1,3,5,50,200,'small gun','gun1.png','bullet1.png']
 ]
 #weapons:
 #		0 - типы вооружения (type(номер типа) = index in list
@@ -332,15 +333,21 @@ def startmaze():
 		y=random.randrange(int((grid_y-1)/2))
 		if randommaze[y*2+1][x*2+2]==1:
 			randommaze[y*2+1][x*2+2]=0
+	#START and EXIT
+	randommaze[START[1]][START[0]]=0
+	randommaze[EXIT[1]][EXIT[0]]=0
+	'''
 	randommaze[1][0]=0 #start walk point 
 	randommaze[grid_y-2][grid_x-1]=0 #end walk point
+	'''
 	xsize=grid_x
 	ysize=grid_y
+	#убрать одиночные блоки
 	for k in range(xsize-1):
 		for l in range(ysize-1):
 			if randommaze[l][k]==1 and randommaze[l-1][k]==0 and randommaze[l+1][k]==0 and randommaze[l][k-1]==0 and randommaze[l][k+1]==0:
 				randommaze[l][k]=0
-	#убрать одиночные блоки
+	
 	#print(cicle)
 	return randommaze
 
@@ -736,6 +743,17 @@ def displaymaze(activity):
 			enemy_heal=int(k[6]*cellsize/enemy_type[ k[5] ][6]) #расчет процента здоровья врага
 			pygame.draw.line(gameDisplay, red, (enemy_x,enemy_y),(enemy_x+enemy_heal,enemy_y))
 	#print ('count display enemy by tick:'+str(enemy_display_count)) #print count of displayed enemies
+
+	#display exit:
+	current_level=mazenumber
+	i=len(mazelevels) #длина массива уровней
+	if current_level>=i: current_level=i-1 #уровень не превышает последний
+	x_complete=EXIT[0]
+	y_complete=EXIT[1]
+	exit_x=cellsize*(x_complete-center_x_temp+diff_x+display_x_temp//2)+dx
+	exit_y=cellsize*(y_complete-center_y_temp+diff_y+display_y_temp//2)+dy
+	gameDisplay.blit(zoomexit[image_index],(exit_x,exit_y))
+
 	#display bullets
 	for i in range(len(player_bullets)):
 		bullet_x=player_bullets[i][6]
@@ -914,8 +932,8 @@ def initplayer():
 	global cellsize
 	global player_bullets
 	cellsize=zoomsize[-1]
-	player_x=0
-	player_y=1
+	player_x=START[0]
+	player_y=START[1]
 	player_energy=upgrades['ENERGY_MAX'][player_upgrades['ENERGY_MAX']]
 	player_oxygen=upgrades['OXYGEN_MAX'][player_upgrades['OXYGEN_MAX']]
 	player_heal  =upgrades['HEALTH_MAX'][player_upgrades['HEALTH_MAX']]
@@ -960,7 +978,9 @@ def update_expirience():
 
 #update level global parameters before start maze and after level complete or game over
 def mazelevels_update(level):
-	global grid_x,grid_y,maze_randomcicles,objects_oxygen,objects_energy,objects_movingblock,objects_enemy,enemy_maxlevel,objects_health,objects_hole,concentration_oxygen,objects_ammo
+	global grid_x,grid_y,maze_randomcicles,objects_oxygen,objects_energy,objects_movingblock
+	global objects_enemy,enemy_maxlevel,objects_health,objects_hole,concentration_oxygen,objects_ammo
+	global START, EXIT
 	i=len(mazelevels) #длина массива уровней
 	if level>=i: level=i-1 #уровень не превышает последний
 	print('сложность уровня: '+str(level))
@@ -978,6 +998,20 @@ def mazelevels_update(level):
 	objects_ammo=mazelevels[level][11]
 	#лабиринты задают параметры при увеличении mazenumber
 	#grid_x,grid_y,maze_randomcicles,objects_oxygen,objects_energy,objects_movingblock,objects_enemy,maxlevel of enemy(?)
+	START=[]
+	EXIT=[]
+	START.append(mazelevels_target[level]['GOTO'][0])
+	START.append(mazelevels_target[level]['GOTO'][1])
+	if START[0]==0 and START[1]==0: #random START position of player
+		START[0]=random.randrange(int((grid_x-1)/2)-1)*2+2
+		START[1]=random.randrange(int((grid_y-1)/2))*2+1
+	EXIT.append(mazelevels_target[level]['GOTO'][2])
+	EXIT.append(mazelevels_target[level]['GOTO'][3])
+	if EXIT[0]==0 and EXIT[1]==0: #random START position of player
+		EXIT[0]=random.randrange(int((grid_x-1)/2)-1)*2+2
+		EXIT[1]=random.randrange(int((grid_y-1)/2))*2+1
+
+
 	print ('cell size: '+str(cellsize))
 	print ('grid_x:	'+str(grid_x))
 	print ('grid_y:	'+str(grid_y))
@@ -990,6 +1024,7 @@ def mazelevels_update(level):
 	print ('enemies max level: '+str(enemy_maxlevel))
 	print ('holes:'+str(objects_hole))
 	print ('oxygen concentration:'+str(concentration_oxygen))
+	print ('start:'+str(START)+' exit:'+str(EXIT))
 
 
 #game over, wait 5 sec
@@ -1338,6 +1373,8 @@ hole = pygame.image.load('hole1.png').convert()
 zoomhole=[pygame.transform.scale(hole,(size,size)) for size in zoomsize]
 ammo_image = pygame.image.load('ammo3.png').convert()
 zoomammo=[pygame.transform.scale(ammo_image,(size,size)) for size in zoomsize]
+exit_image = pygame.image.load('exit1.png').convert()
+zoomexit=[pygame.transform.smoothscale(exit_image,(size,size)) for size in zoomsize]
 '''
 arrow_up = pygame.image.load('arrow_up.png').convert()
 zoomarrow_up=[pygame.transform.scale(arrow_up,(size,size)) for size in zoomsize]
@@ -1425,8 +1462,8 @@ def gameloop():
 	current_level=mazenumber
 	i=len(mazelevels) #длина массива уровней
 	if current_level>=i: current_level=i-1 #уровень не превышает последний
-	x_complete=mazelevels_target[current_level]['GOTO'][2]
-	y_complete=mazelevels_target[current_level]['GOTO'][3]
+	x_complete=EXIT[0]
+	y_complete=EXIT[1]
 	kill_complete=mazelevels_target[current_level]['KILL']
 	boss_complete=mazelevels_target[current_level]['BOSS']
 	print('goto x:'+str(x_complete)+' y:'+str(y_complete)+' kill:'+str(kill_complete)+' boss:'+str(boss_complete))
@@ -1698,7 +1735,7 @@ def gameloop():
 				maze_oxygen=start_env(concentration_oxygen) #generate oxygen
 				'''
 				main_menu()
-			else:player_x-=1
+			#else:player_x-=1
 		#test game over:
 		if player_oxygen<=0 or player_energy<=0 or player_heal<=0:
 			gameover() #надпись game over
