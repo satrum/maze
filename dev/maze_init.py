@@ -157,6 +157,7 @@ env_speed={'OXYGEN':[100,0]} #шаги, через которые произой
 #player:
 player_x=0
 player_y=1
+START=[0,1]
 #массив для разных направлений игрока и врагов dx,dy,image_index for display maze
 directions={
 'RIGHT': [1 , 0, 0],
@@ -214,7 +215,7 @@ print('upgraded player: ',player_energy, player_oxygen, player_heal, player_dama
 
 #fire:
 weapons=[
-	[0,0,1,3,5,50,200,'small gun','gun1.png','bullet1.png'] #[0,0,1,5,10,50,200,'small gun','gun1.png','bullet1.png']
+	[0,0,1,5,10,50,200,'small gun','gun1.png','bullet1.png'] #[0,0,1,5,10,50,200,'small gun','gun1.png','bullet1.png']
 	#test minigun [0,0,1,3,5,50,200,'small gun','gun1.png','bullet1.png']
 ]
 #weapons:
