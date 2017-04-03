@@ -81,7 +81,7 @@ enemy_type=[
 #7 - урон от столкновения
 #8 - killed (False, True)
 #9 - name of enemy type for 'BOSS'
-# only in enemy list (init in startobjects() :
+# only in enemy list (init in startobjects()) :
 #9 - 0,1,2 or 3 move: enemy_move() - dirarray)
 #10 - FLAG enemy moved (False or True)
 print ('cell size: '+str(cellsize))
