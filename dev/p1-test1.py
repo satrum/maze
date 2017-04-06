@@ -103,7 +103,7 @@ def startmaze():
 
 #generate objects in maze: GLOBAL - maze, objects_energy, objects_oxygen, grid_x, grid_y
 def startobjects():
-	global maze, enemy
+	global maze, enemy, objects_array
 	objectsmaze=[[]]
 	print(objectsmaze, grid_x, grid_y)
 	objectsmaze=[[maze[y][x] for x in range(grid_x)] for y in range(grid_y)]
@@ -152,6 +152,39 @@ def startobjects():
 			objectsmaze[y][x]=4
 			maze[y][x]=0
 			count-=1
+	
+	#generate special objects (generators)
+	objects_array=[]
+	count=objects_energy_gen #вместо стен energy generators
+	while count>0:
+		x=random.randrange(int(grid_x-2))+1
+		y=random.randrange(int(grid_y-2))+1
+		if maze[y][x]==1:
+			objectsmaze[y][x]=50
+			maze[y][x]=0
+			count-=1
+			objects_array.append([ 50,objects_dict[50]['max'],objects_dict[50]['state'],x,y ])
+	count=objects_heal_gen #вместо стен heal generators
+	while count>0:
+		x=random.randrange(int(grid_x-2))+1
+		y=random.randrange(int(grid_y-2))+1
+		if maze[y][x]==1:
+			objectsmaze[y][x]=51
+			maze[y][x]=0
+			count-=1
+			objects_array.append([ 51,objects_dict[51]['max'],objects_dict[51]['state'],x,y ])
+	count=objects_oxygen_gen #вместо стен heal generators
+	while count>0:
+		x=random.randrange(int(grid_x-2))+1
+		y=random.randrange(int(grid_y-2))+1
+		if maze[y][x]==1:
+			objectsmaze[y][x]=52
+			maze[y][x]=0
+			count-=1
+			objects_array.append([ 52,objects_dict[52]['max'],objects_dict[52]['state'],x,y ])
+	for i in objects_array: 
+		print(objects_dict[ i[0] ]['name'],i) #print special objects
+
 	count=0 # генерация врагов в коридорах
 	enemy=[[] for i in range(objects_enemy)]
 	#test BOSS:
@@ -192,13 +225,13 @@ def start_env(concentration):
 			if maze_objects[y][x]==1:env_maze[y][x]=0#1 - block
 			if maze_objects[y][x]==4:env_maze[y][x]=0#4 - moving block
 			if maze_objects[y][x]==7:env_maze[y][x]=0#7 - hole
-
 	#for i in range(grid_y):
 	#	print (env_maze[i])
 	return env_maze
 
 #change concentration: maze_oxygen
 def next_env(env_maze): #таблица среды и имя среды
+	global objects_array
 	#print('\n')
 	env_change=[[0 for x in range(grid_x)] for y in range(grid_y)]
 	for x in range(1,grid_x-1):
@@ -225,6 +258,10 @@ def next_env(env_maze): #таблица среды и имя среды
 				env_maze[y][x]=0
 			else:
 				env_maze[y][x]+=env_change[y][x]
+	for obj in objects_array:
+		if obj[0]==52 and obj[1]>=objects_dict[52]['max']: #если объект - генератор кислорода и уровень кислорода на максимуме
+			env_maze[ obj[4] ][ obj[3] ]=obj[1] #кислород весь попадает во внешнюю среду
+			obj[1]=0 #генератор кислорода опустошается
 	#for i in range(grid_y):
 	#	print (env_maze[i])
 	return env_maze
@@ -440,6 +477,24 @@ def displaymaze(activity):
 							gameDisplay.blit(zoomhole[image_index],(x,y))
 						if maze_objects[j][i]==8:
 							gameDisplay.blit(zoomammo[image_index],(x,y))
+						if maze_objects[j][i]==50: #energy generator
+							gameDisplay.blit(zoom_gen_energy[image_index],(x,y))
+							for k in range(len(objects_array)): #найти нужный объект
+								if i==objects_array[k][3] and j==objects_array[k][4]: obj_index=k
+							#расчет процента ресурса и отрисовка
+							pygame.draw.line(gameDisplay, red, (x,y+2),(x+int(objects_array[obj_index][1]*cellsize/objects_dict[50]['max']),y+2))
+						if maze_objects[j][i]==51: #health generator
+							gameDisplay.blit(zoom_gen_heal[image_index],(x,y))
+							for k in range(len(objects_array)): #найти нужный объект
+								if i==objects_array[k][3] and j==objects_array[k][4]: obj_index=k
+							#расчет процента ресурса и отрисовка
+							pygame.draw.line(gameDisplay, red, (x,y+2),(x+int(objects_array[obj_index][1]*cellsize/objects_dict[51]['max']),y+2))
+						if maze_objects[j][i]==52: #oxygen generator
+							gameDisplay.blit(zoom_gen_oxygen[image_index],(x,y))
+							for k in range(len(objects_array)): #найти нужный объект
+								if i==objects_array[k][3] and j==objects_array[k][4]: obj_index=k
+							#расчет процента ресурса и отрисовка
+							pygame.draw.line(gameDisplay, red, (x,y+2),(x+int(objects_array[obj_index][1]*cellsize/objects_dict[52]['max']),y+2))
 						#if maze_objects[j][i]==5:
 							#enemy_index=[enemy.index(k) for k in enemy if k[0]==i and k[1]==j and k[8]==False][0]#найти врага, cool!
 							
@@ -730,6 +785,7 @@ def update_expirience():
 def mazelevels_update(level):
 	global grid_x,grid_y,maze_randomcicles,objects_oxygen,objects_energy,objects_movingblock
 	global objects_enemy,enemy_maxlevel,objects_health,objects_hole,concentration_oxygen,objects_ammo
+	global objects_energy_gen,objects_heal_gen,objects_oxygen_gen
 	global START, EXIT
 	i=len(mazelevels) #длина массива уровней
 	if level>=i: level=i-1 #уровень не превышает последний
@@ -746,6 +802,9 @@ def mazelevels_update(level):
 	objects_hole=mazelevels[level][9]
 	concentration_oxygen=mazelevels[level][10]
 	objects_ammo=mazelevels[level][11]
+	objects_energy_gen=mazelevels[level][12]
+	objects_heal_gen=mazelevels[level][13]
+	objects_oxygen_gen=mazelevels[level][14]
 	#лабиринты задают параметры при увеличении mazenumber
 	#grid_x,grid_y,maze_randomcicles,objects_oxygen,objects_energy,objects_movingblock,objects_enemy,maxlevel of enemy(?)
 	START=[]
@@ -774,7 +833,11 @@ def mazelevels_update(level):
 	print ('enemies max level: '+str(enemy_maxlevel))
 	print ('holes:'+str(objects_hole))
 	print ('oxygen concentration:'+str(concentration_oxygen))
+	print ('ammo:'+str(objects_ammo))
 	print ('start:'+str(START)+' exit:'+str(EXIT))
+	print ('energy generators:'+str(objects_energy_gen))
+	print ('heal   generators:'+str(objects_heal_gen))
+	print ('oxygen generators:'+str(objects_oxygen_gen))
 
 
 #game over, wait 5 sec
@@ -798,7 +861,7 @@ def startover():
 
 #initialize level
 def startlevel():
-	global maze, maze_objects, maze_oxygen
+	global maze, maze_objects, maze_oxygen, concentration_oxygen
 	#init:
 	mazelevels_update(mazenumber) #считывание глобальных параметров уровня
 	maze=startmaze() #generate maze
@@ -806,6 +869,7 @@ def startlevel():
 	initplayer() #init to default player with upgrades and fog
 	maze_fog_update(player_x,player_y) #update fog at player position
 	maze_oxygen=start_env(concentration_oxygen) #generate oxygen
+	if objects_oxygen_gen>0: concentration_oxygen=objects_dict[52]['max'] #если на уровне есть генераторы кислорода, то концентрация не нулевая
 	gameloop() #begin play game on level
 
 #load player from file in main menu, or from network
@@ -1092,7 +1156,23 @@ def bullets_fly(bullets):
 	#print(bullets)
 	return bullets
 
-
+#пересчет специальных объектов
+def objects_change(objects_on_level):
+	for obj in objects_on_level:
+		if obj[2]==True: #0 - type, 1 - value, 2 - state (ON==True,OFF==False)
+			if obj[0]==50: #energy generator
+				obj[1]=obj[1]+objects_dict[50]['cooldown']/cooldown['TICK']
+				if obj[1]>objects_dict[50]['max']:obj[1]=objects_dict[50]['max']
+			if obj[0]==51: #health generator
+				obj[1]=obj[1]+objects_dict[51]['cooldown']/cooldown['TICK']
+				if obj[1]>objects_dict[51]['max']:obj[1]=objects_dict[51]['max']
+			if obj[0]==52: #oxygen generator
+				obj[1]=obj[1]+objects_dict[52]['cooldown']/cooldown['TICK']
+				if obj[1]>objects_dict[52]['max']:obj[1]=objects_dict[52]['max']
+			if obj[0]==53: #slime  generator
+				obj[1]=obj[1]+objects_dict[53]['cooldown']/cooldown['TICK']
+				if obj[1]>objects_dict[53]['max']:obj[1]=objects_dict[53]['max']
+	return objects_on_level
 
 #import and create pictures:
 wall=pygame.image.load('wall15.png').convert()
@@ -1125,6 +1205,12 @@ ammo_image = pygame.image.load('ammo3.png').convert()
 zoomammo=[pygame.transform.scale(ammo_image,(size,size)) for size in zoomsize]
 exit_image = pygame.image.load('exit1.png').convert()
 zoomexit=[pygame.transform.smoothscale(exit_image,(size,size)) for size in zoomsize]
+gen_energy_img = pygame.image.load('generator1.png').convert()
+zoom_gen_energy=[pygame.transform.scale(gen_energy_img,(size,size)) for size in zoomsize]
+gen_heal_img   = pygame.image.load('generator2.png').convert()
+zoom_gen_heal  =[pygame.transform.scale(gen_heal_img  ,(size,size)) for size in zoomsize]
+gen_oxygen_img   = pygame.image.load('generator3.png').convert()
+zoom_gen_oxygen  =[pygame.transform.scale(gen_oxygen_img  ,(size,size)) for size in zoomsize]
 '''
 arrow_up = pygame.image.load('arrow_up.png').convert()
 zoomarrow_up=[pygame.transform.scale(arrow_up,(size,size)) for size in zoomsize]
@@ -1153,6 +1239,9 @@ for i in range(len(zoomsize)):
 	zoomoxygen[i].set_colorkey((16777215)) #white
 	zoomhole[i].set_colorkey((16777215))
 	zoomammo[i].set_colorkey((15539236))
+	zoom_gen_energy[i].set_colorkey((15539236)) #red
+	zoom_gen_heal[i].set_colorkey((15539236)) #red
+	zoom_gen_oxygen[i].set_colorkey((15539236)) #red
 	'''
 	zoomarrow_up[i].set_colorkey((16777215))
 	zoomarrow_down[i].set_colorkey((16777215))
@@ -1205,6 +1294,7 @@ def gameloop():
 	global FLAG_SCANNER, FLAG_SOUNDON
 	global player_inventory
 	global player_bullets
+	global objects_array
 	global player_display_x, player_display_y
 	act=['',0] #действие игрока текущее и длительность в тиках
 	#act['MOVE',10]
@@ -1465,6 +1555,26 @@ def gameloop():
 					player_inventory[inventory_index][2]=bullets_maximum
 				maze_objects[player_y][player_x]=0
 				player_action['PICK']+=1
+		#test pick energy generator:
+		if maze_objects[player_y][player_x]==50:
+			player_energy_diff=upgrades['ENERGY_MAX'][player_upgrades['ENERGY_MAX']]-player_energy
+			for i in range(len(objects_array)): #найти нужный объект
+				if player_x==objects_array[i][3] and player_y==objects_array[i][4]: obj_index=i
+			obj_value=objects_array[obj_index][1]
+			if obj_value>1 and player_energy_diff>1: #если энергии у игрока мало и есть энергия в генераторе
+				player_energy+=1
+				objects_array[obj_index][1]-=1
+				print('player pick energy from generator')
+		#test pick heal generator:
+		if maze_objects[player_y][player_x]==51:
+			player_heal_diff=upgrades['HEALTH_MAX'][player_upgrades['HEALTH_MAX']]-player_heal
+			for i in range(len(objects_array)): #найти нужный объект
+				if player_x==objects_array[i][3] and player_y==objects_array[i][4]: obj_index=i
+			obj_value=objects_array[obj_index][1]
+			if obj_value>1 and player_heal_diff>1: #если здоровья у игрока мало и есть запас здоровья в генераторе
+				player_heal+=1
+				objects_array[obj_index][1]-=1
+				print('player pick health from generator')
 
 		#test level complete:
 		#test GOTO and KILL complete
@@ -1509,6 +1619,8 @@ def gameloop():
 		player_bullets=bullets_fly(player_bullets)
 		#enemy move cicle
 		enemy_move()
+		#change objects(generators) cicle
+		objects_array=objects_change(objects_array)
 		
 		#change environment (oxygen) with env_speed tick
 		#print(concentration_oxygen, env_speed['OXYGEN'][1])

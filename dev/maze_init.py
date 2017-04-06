@@ -55,6 +55,27 @@ objects_ammo=0 #ammo for 50 bullets
 # 6 - health +50%
 # 7 - hole (яма, дыра, засасывающая кислород)
 # 8 - bullets (small gun)
+
+#generators and other objects:
+objects_dict={
+50:{'name':'energy generator','objects_id':50,'max':50.0,'cooldown':1 ,'state':True},
+51:{'name':'health generator','objects_id':51,'max':50.0,'cooldown':1 ,'state':True},
+52:{'name':'oxygen generator','objects_id':52,'max':100.0,'cooldown':50,'state':True},
+53:{'name':'slime  generator','objects_id':53,'max':50.0,'cooldown':10,'state':True}
+}
+# name
+# objects_id - number in maze_objects[][]
+# max - maximum value resource in object
+# cooldown - increment resource in 1 sec (need divide by cooldown['TICK'])
+# state - default state by generation (True(ON), False(OFF))
+objects_array=[]
+# objects dropped and generated on startobjects(), changed by mainloop in objects_change()
+# objects_id,current value, state, x, y
+# example: [ [50,45,True, 10,10], [51,0,False, 10,10] ]
+# 	this is energy_generator, with current 45 energy adn state=True
+# 	this is heal_generator, with current 0 health adn state=False
+
+
 #На карте появляются враги(монстры), которые перемещаются, у них есть скорость, уровень агрессии, урон, здоровье.
 objects_enemy=50
 enemy_maxlevel=[0]
@@ -96,23 +117,23 @@ print ('enemies max level: '+str(enemy_maxlevel))
 #print (len(enemy))
 mazenumber=0 #count of maze generation
 mazelevels=[
-[21, 21, 30  ,0, 3 , 0   ,10  ,[0]      ,0 ,0  ,0 ,0 ], #0 easy test level, +energy
-[51, 45, 100 ,5 ,20, 0   ,10  ,[4]      ,0 ,0  ,0 ,0 ], #1 medium test level, +oxygen, affraid enemies
-[75, 45, 200 ,10,40, 0   ,20  ,[4]      ,0 ,0  ,0 ,2 ], #2 medium level, energy+oxygen, affraid enemies
-[75, 45, 100 ,10,40, 100 ,0   ,[0]      ,0 ,0  ,0 ,0 ], #3 moving blocks (сложный лабиринт)
-[75, 45, 200 ,10,50, 150 ,30  ,[0]      ,2 ,0  ,0 ,2 ], #4 enemie level 0
-[75, 45, 150 ,10,50, 300 ,60  ,[0]      ,8 ,0  ,0 ,4 ], #5 more enemie level 0
-[75, 75, 300 ,15,80, 200 ,90  ,[0,1]    ,8 ,0  ,0 ,8 ], #6 enemie level 1 75*75
-[75, 75, 200 ,15,80, 400 ,120 ,[0,1]    ,8 ,0  ,0 ,12], #7 more enemie level 1 75*75 + boss
-[101,101,500 ,0, 100,300 ,200 ,[0,1,2]  ,12,100,20,16], #8 big level enemie level 2 101*101 holes and env_oxygen
-[201,201,2000,40,400,2000,300 ,[0,1,2,3],20,0  ,0 ,50], #9 very big level enemie level 3 201*201 трудный лабиринт
-[201,201,9999,10,400,2000,1000,[0,1,2,3],10,100,20,80], #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
+[21, 21, 30  ,0, 3 , 0   ,10  ,[0]      ,0 ,0  ,0 ,0  ,2 ,1 ,5], #0 easy test level, +energy
+[51, 45, 100 ,5 ,20, 0   ,10  ,[4]      ,0 ,0  ,0 ,0  ,0 ,0 ,0], #1 medium test level, +oxygen, affraid enemies
+[75, 45, 200 ,10,40, 0   ,20  ,[4]      ,0 ,0  ,0 ,2  ,0 ,0 ,0], #2 medium level, energy+oxygen, affraid enemies
+[75, 45, 100 ,10,40, 100 ,0   ,[0]      ,0 ,0  ,0 ,0  ,0 ,0 ,0], #3 moving blocks (сложный лабиринт)
+[75, 45, 200 ,10,50, 150 ,30  ,[0]      ,2 ,0  ,0 ,2  ,0 ,0 ,0], #4 enemie level 0
+[75, 45, 150 ,10,50, 300 ,60  ,[0]      ,8 ,0  ,0 ,4  ,0 ,0 ,0], #5 more enemie level 0
+[75, 75, 300 ,15,80, 200 ,90  ,[0,1]    ,8 ,0  ,0 ,8  ,0 ,0 ,0], #6 enemie level 1 75*75
+[75, 75, 200 ,15,80, 400 ,120 ,[0,1]    ,8 ,0  ,0 ,12 ,0 ,0 ,0], #7 more enemie level 1 75*75 + boss
+[101,101,500 ,0, 100,300 ,200 ,[0,1,2]  ,12,100,20,16 ,0 ,0 ,0], #8 big level enemie level 2 101*101 holes and env_oxygen
+[201,201,2000,40,400,2000,300 ,[0,1,2,3],20,0  ,0 ,50 ,0 ,0 ,0], #9 very big level enemie level 3 201*201 трудный лабиринт
+[201,201,9999,10,400,2000,1000,[0,1,2,3],10,100,20,80 ,0 ,0 ,0], #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
 # 10 - надо агрессию у врагов! патроны заканчиваются!
-[201,201,5000,50,500,3000,1000,[0,5]    ,30,0  ,0 ,100] #11 пока тестируется. Цель - убить большое количество врагов.
-# вылетает ошибка [Finished in 14.6s with exit code 3221225725]
+[201,201,5000,0 ,200,3000,1000,[0,5]    ,30,0  ,0 ,200,30,30,30] #11 пока тестируется. Цель - убить большое количество врагов.
+# вылетает ошибка [Finished in 14.6s with exit code 3221225725] если делать 250 на 250
 # 11 - Надо новый элемент, например оружие и апргейды на него. Базы: Телепорт, генераторы кислорода и энергии. 
 ]
-#0   1   2    3  4   5    6    7         8  9   10 11
+#0   1   2    3  4   5    6    7         8  9   10 11  12 13 14
 print(mazelevels)
 #лабиринты задают параметры при увеличении mazenumber
 #0 - grid_x
@@ -127,10 +148,13 @@ print(mazelevels)
 #9 - objects_hole
 #10 - concentration_oxygen
 #11 - objects_ammo (small gun 50 bullets)
+#12 - special object: energy generators
+#13 - special object: health generators
+#14 - special object: oxygen generators
 #пока нет, но надо:  oxygen env flag on/off (просчитывать ли вообще кислород или он в нуле), oxygen generator, bullet(small gun)
 mazelevels_target=[
 #[0,1,21-1,21-2] 0 level START/EXIT test: [0,0,0   ,0   ]
-{'GOTO': [0,1,21-1,21-2]  ,'KILL': 5,   'PICK': 0, 'BOSS':0, 'TEXT':'small level with energy and agressive enemies, kill 5 enemy!'}, #0
+{'GOTO': [0,1,21-1,21-2]  ,'KILL': 5,   'PICK': 0, 'BOSS':0, 'TEXT':'test level with energy and agressive enemies, kill 5 enemy!'}, #0
 {'GOTO': [0,1,51-2,45-2]  ,'KILL': 1,   'PICK': 0, 'BOSS':0, 'TEXT':'small level with oxygen, enemies are running away'}, #1
 {'GOTO': [0,1,0,0      ]  ,'KILL': 1,   'PICK': 0, 'BOSS':0, 'TEXT':'medium level with oxygen, enemies are running away, find EXIT'}, #2
 {'GOTO': [0,1,75-2,45-2]  ,'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'complex medium level with moving blocks'}, #3
@@ -141,7 +165,7 @@ mazelevels_target=[
 {'GOTO': [0,1,101-2,101-2],'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'very big level with 3 types of enemies and oxygen environment'}, #8
 {'GOTO': [0,1,201-2,201-2],'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'super level with 4 types of enemies'}, #9
 {'GOTO': [0,1,201-2,201-2],'KILL': 100, 'PICK': 0, 'BOSS':0, 'TEXT':'open super level with 4 types of enemies and oxygen, kill 100 enemy!'}, #10
-{'GOTO': [0,1,201-2,201-2],'KILL': 200, 'PICK': 0, 'BOSS':0, 'TEXT':'super level with 2 types of agressive enemies, kill 200 enemy!'} #11
+{'GOTO': [0,1,201-2,201-2],'KILL': 500, 'PICK': 0, 'BOSS':0, 'TEXT':'super level with 2 types of agressive enemies, kill 500 enemy!'} #11
 ]
 #GOTO - start and level complete player position. If [0,0,*,*] or [*,*,0,0] - generate START or EXIT points random
 #KILL - need to kill enemies for level complete
