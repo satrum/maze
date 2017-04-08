@@ -202,7 +202,7 @@ def startobjects():
 			i=enemy_maxlevel[random.randrange(len(enemy_maxlevel))] #случайный выбор типа врагов из списка доступных типов для данного уровня
 			if boss_level>0 and count==0: #test first enemy and BOSS on level
 				i=boss_level
-			enemy[count]=[x*2+2,y*2+1,10,0,0,0,0,0,False,0,False] #enemy x,y,speed(act=10),act,state(random=0),type,heal,damage,killed, direction, FLAG_last_moved
+			enemy[count]=[x*2+2,y*2+1,10,0,0,0,0,0,False,0,False, time.time()] #enemy x,y,speed(act=10),act,state(random=0),type,heal,damage,killed, direction, FLAG_last_moved, time.time()
 			enemy[count][2]=enemy_type[i][2] #speed
 			enemy[count][4]=enemy_type[i][4] #state
 			enemy[count][5]=enemy_type[i][5] #type
@@ -212,7 +212,7 @@ def startobjects():
 	#print(str(objects_enemy)+' '+str(len(enemy)))
 	#print(objectsmaze)
 	#print(enemy)
-	return objectsmaze	
+	return objectsmaze
 
 #generate environment: maze_oxygen
 def start_env(concentration):
@@ -291,7 +291,7 @@ def enemy_move():
 		enemy_state=enemy[i][4] #4 - state(0 - случайное блуждание, 1 - от края до края, 2 - нападение, 3 - убегает, 4 - стоит)
 		enemy_direction=enemy[i][9] #9 - direction 0-RIGHT 1-LEFT 2-UP 3-DOWN
 
-		if enemy_act>0:
+		if enemy_act>0 and enemy[i][8]==False:
 			enemy[i][3]-=1 #враг неподвижен пока не закончит ход
 		elif enemy[i][8]==False: #враг живой
 			#здесь выбор тактики и само движение
@@ -385,6 +385,7 @@ def enemy_move():
 				if enemy[i][6]<=0:
 					print('enemy destroyed by impact')
 					enemy[i][8]=True #враг считается убитым
+					enemy[i][11]=time.time() #time of killed
 					maze_objects[enemy[i][1]][enemy[i][0]]=0 #враг удаляется из предметов
 					player_action['KILL']+=1 #увеличиваем статистику убийств
 			elif enemy_x==0 or enemy_x==grid_x-1 or enemy_y==0 or enemy_y==grid_y-1: #враг не может войти в крайние поля лабиринта
@@ -481,18 +482,24 @@ def displaymaze(activity):
 							gameDisplay.blit(zoom_gen_energy[image_index],(x,y))
 							for k in range(len(objects_array)): #найти нужный объект
 								if i==objects_array[k][3] and j==objects_array[k][4]: obj_index=k
+							if objects_array[obj_index][2]==False:
+								gameDisplay.blit(zoomoff[image_index],(x,y))
 							#расчет процента ресурса и отрисовка
 							pygame.draw.line(gameDisplay, red, (x,y+2),(x+int(objects_array[obj_index][1]*cellsize/objects_dict[50]['max']),y+2))
 						if maze_objects[j][i]==51: #health generator
 							gameDisplay.blit(zoom_gen_heal[image_index],(x,y))
 							for k in range(len(objects_array)): #найти нужный объект
 								if i==objects_array[k][3] and j==objects_array[k][4]: obj_index=k
+							if objects_array[obj_index][2]==False:
+								gameDisplay.blit(zoomoff[image_index],(x,y))
 							#расчет процента ресурса и отрисовка
 							pygame.draw.line(gameDisplay, red, (x,y+2),(x+int(objects_array[obj_index][1]*cellsize/objects_dict[51]['max']),y+2))
 						if maze_objects[j][i]==52: #oxygen generator
 							gameDisplay.blit(zoom_gen_oxygen[image_index],(x,y))
 							for k in range(len(objects_array)): #найти нужный объект
 								if i==objects_array[k][3] and j==objects_array[k][4]: obj_index=k
+							if objects_array[obj_index][2]==False:
+								gameDisplay.blit(zoomoff[image_index],(x,y))
 							#расчет процента ресурса и отрисовка
 							pygame.draw.line(gameDisplay, red, (x,y+2),(x+int(objects_array[obj_index][1]*cellsize/objects_dict[52]['max']),y+2))
 						#if maze_objects[j][i]==5:
@@ -516,7 +523,27 @@ def displaymaze(activity):
 					else:
 						pygame.draw.rect(gameDisplay, black, (x,y,cellsize,cellsize)) #fog of war
 
-	#display enemies
+	#display dead enemies
+	for k in enemy:
+		enemy_x=cellsize*(k[0]-center_x_temp+diff_x+display_x_temp//2)#+display_x//2
+		enemy_y=cellsize*(k[1]-center_y_temp+diff_y+display_y_temp//2)#+display_y//2
+		enemy_x+=dx
+		enemy_y+=dy
+		outscreen=enemy_x+cellsize<0 or enemy_x>=display_x or enemy_y+cellsize<0 or enemy_y>=display_y
+		time_passed=time.time()-k[11]
+		if not outscreen and (maze_fog[ k[1] ][ k[0] ]==1 or FLAG_FOG) and k[8]==True and time_passed<enemy_blood_timer:
+			enemy_speed=k[2]
+			enemy_act=k[3] #<speed - двигается
+			enemy_direction=k[9] #9 - direction 0-RIGHT 1-LEFT 2-UP 3-DOWN
+			#if enemy_act<enemy_speed: #если враг в движении
+			if k[10]:
+				enemy_dx=int(dirarray[enemy_direction][0]*cellsize*enemy_act/enemy_speed)
+				enemy_dy=int(dirarray[enemy_direction][1]*cellsize*enemy_act/enemy_speed)
+				enemy_x-=enemy_dx
+				enemy_y-=enemy_dy
+			gameDisplay.blit(zoomblood[image_index],(enemy_x,enemy_y))
+	
+	#display live enemies
 	enemy_display_count=0 #calculate displayed enemies
 	for k in enemy:
 		enemy_x=cellsize*(k[0]-center_x_temp+diff_x+display_x_temp//2)#+display_x//2
@@ -762,6 +789,14 @@ def initplayer():
 		maze_fog[j][0]=1
 		maze_fog[j][grid_x-1]=1
 	starttime=time.clock()
+	print('starttime: '+str(starttime))
+	print( time.strftime( "%a, %d %b %Y %H:%M:%S +0000", time.gmtime() ) ) #https://docs.python.org/3/library/time.html
+	print( time.gmtime(time.time()) ) #time() return seconds from epoch and format by gmtime()
+	'''
+	starttime: 2.136531946524596
+	time.struct_time(tm_year=2017, tm_mon=4, tm_mday=8, tm_hour=15, tm_min=43, tm_sec=16, tm_wday=5, tm_yday=98, tm_isdst=0) Sat, 08 Apr 2017 15:43:16 +0000
+	time.struct_time(tm_year=1970, tm_mon=1, tm_mday=1, tm_hour=0, tm_min=16, tm_sec=40, tm_wday=3, tm_yday=1, tm_isdst=0)
+	'''
 
 #update maze for after moving player GLOBAL - fog_radius, grid_x, grid_y
 def maze_fog_update(x,y):
@@ -841,13 +876,15 @@ def mazelevels_update(level):
 
 
 #game over, wait 5 sec
-def gameover():
+def gameover(text):
 	gameoverimg=pygame.image.load('gameover1.jpg').convert()
 	zoomgameoverimg=pygame.transform.smoothscale(gameoverimg,(display_x,display_y+info_height))
 	gameDisplay.blit(zoomgameoverimg,(0,0))
 	myfont = pygame.font.SysFont(font_def,50)
 	mytext = myfont.render('GAME OVER', True, red)
 	gameDisplay.blit(mytext,((display_x-mytext.get_width())//2,display_y//2))
+	mytext = myfont.render(text, True, red)
+	gameDisplay.blit(mytext,((display_x-mytext.get_width())//2,display_y//2+50))
 	pygame.display.update()
 	pygame.time.wait(5000)
 
@@ -1145,11 +1182,12 @@ def bullets_fly(bullets):
 			print('bullet in enemy')
 			player_action['HIT']+=1
 			damage=bullets[i][9]
-			enemy_index=[enemy.index(j) for j in enemy if j[0]==x and j[1]==y][0]#найти индекс врага
+			enemy_index=[enemy.index(j) for j in enemy if j[0]==x and j[1]==y and j[8]==False][0]#найти индекс врага
 			enemy[enemy_index][6]=enemy[enemy_index][6]-damage #урон врагу пулей
 			if enemy[enemy_index][6]<=0: #проверка здоровья врага
 				print('enemy destroyed by fire')
 				enemy[enemy_index][8]=True #враг считается убитым
+				enemy[enemy_index][11]=time.time() #time of killed
 				maze_objects[y][x]=0 #враг удаляется из предметов
 				player_action['KILL']+=1 #увеличиваем статистику убийств
 			bullets.pop(i)
@@ -1211,6 +1249,10 @@ gen_heal_img   = pygame.image.load('generator2.png').convert()
 zoom_gen_heal  =[pygame.transform.scale(gen_heal_img  ,(size,size)) for size in zoomsize]
 gen_oxygen_img   = pygame.image.load('generator3.png').convert()
 zoom_gen_oxygen  =[pygame.transform.scale(gen_oxygen_img  ,(size,size)) for size in zoomsize]
+bloodimg   = pygame.image.load('blood.png').convert()
+zoomblood =[pygame.transform.scale(bloodimg  ,(size,size)) for size in zoomsize]
+offimg = pygame.image.load('off.png').convert()
+zoomoff =[pygame.transform.scale(offimg  ,(size,size)) for size in zoomsize]
 '''
 arrow_up = pygame.image.load('arrow_up.png').convert()
 zoomarrow_up=[pygame.transform.scale(arrow_up,(size,size)) for size in zoomsize]
@@ -1242,6 +1284,8 @@ for i in range(len(zoomsize)):
 	zoom_gen_energy[i].set_colorkey((15539236)) #red
 	zoom_gen_heal[i].set_colorkey((15539236)) #red
 	zoom_gen_oxygen[i].set_colorkey((15539236)) #red
+	zoomblood[i].set_colorkey((16777215)) #white
+	zoomoff[i].set_colorkey((16777215)) #white
 	'''
 	zoomarrow_up[i].set_colorkey((16777215))
 	zoomarrow_down[i].set_colorkey((16777215))
@@ -1332,6 +1376,7 @@ def gameloop():
 					enemy[enemy_index][6]=enemy[enemy_index][6]-player_damage #урон врагу
 					if enemy[enemy_index][6]<=0: #проверка здоровья врага
 						enemy[enemy_index][8]=True #враг считается убитым
+						enemy[enemy_index][11]=time.time() #time of killed
 						maze_objects[player_y][player_x+1]=0 #враг удаляется из предметов
 						player_action['KILL']+=1 #увеличиваем статистику убийств
 					#continue
@@ -1363,6 +1408,7 @@ def gameloop():
 					enemy[enemy_index][6]=enemy[enemy_index][6]-player_damage #урон врагу
 					if enemy[enemy_index][6]<=0:
 						enemy[enemy_index][8]=True #враг считается убитым
+						enemy[enemy_index][11]=time.time() #time of killed
 						maze_objects[player_y][player_x-1]=0 #враг удаляется из предметов
 						player_action['KILL']+=1 #увеличиваем статистику убийств
 					#continue
@@ -1394,6 +1440,7 @@ def gameloop():
 					enemy[enemy_index][6]=enemy[enemy_index][6]-player_damage #урон врагу
 					if enemy[enemy_index][6]<=0:
 						enemy[enemy_index][8]=True #враг считается убитым
+						enemy[enemy_index][11]=time.time() #time of killed
 						maze_objects[player_y-1][player_x]=0 #враг удаляется из предметов
 						player_action['KILL']+=1 #увеличиваем статистику убийств
 					#continue
@@ -1425,6 +1472,7 @@ def gameloop():
 					enemy[enemy_index][6]=enemy[enemy_index][6]-player_damage #урон врагу
 					if enemy[enemy_index][6]<=0:
 						enemy[enemy_index][8]=True #враг считается убитым
+						enemy[enemy_index][11]=time.time() #time of killed
 						maze_objects[player_y+1][player_x]=0 #враг удаляется из предметов
 						player_action['KILL']+=1 #увеличиваем статистику убийств
 					#continue
@@ -1516,6 +1564,10 @@ def gameloop():
 							cellsize=zoomsize[zoomindex+1]
 					if event.key == pygame.K_F11:#sound on/off
 						FLAG_SOUNDON=not(FLAG_SOUNDON)
+					if event.key == pygame.K_RETURN: #pressed ENTER, interact with objects
+						if maze_objects[player_y][player_x]>=50 and maze_objects[player_y][player_x]<=53: #if GENERATOR
+							for obj in objects_array:
+								if obj[3]==player_x and obj[4]==player_y: obj[2]=not(obj[2]) #turn on/off generator
 					
 		#gameDisplay.fill(white) #fill display - убрал, так как в displayinfo() заливается нижняя часть белым цветом
 		displaymaze(act) #display maze
@@ -1598,7 +1650,9 @@ def gameloop():
 			#else:player_x-=1
 		#test game over:
 		if player_oxygen<=0 or player_energy<=0 or player_heal<=0:
-			gameover() #надпись game over
+			gameovertext='oxygen over'*(player_oxygen<=0)+'energy over'*(player_energy<=0)+'health over'*(player_heal<=0)
+			print('game over:'+gameovertext)
+			gameover(gameovertext) #надпись game over
 			player_expirience=0 #сброс накопленного опыта
 			mazenumber=0 #сброс на начальный уровень
 			player_upgrades={'EXP':0,'ENERGY_MAX':0,'OXYGEN_MAX':0,'HEALTH_MAX':0,'SPEED_TICK':0,'FOG_RADIUS':0,'MELEE_DAMAGE':0,'OXYGEN_TIME':0,'OXYGEN_ENERGY':0,'BULLETS_MAX':0}

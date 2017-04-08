@@ -60,7 +60,7 @@ objects_ammo=0 #ammo for 50 bullets
 objects_dict={
 50:{'name':'energy generator','objects_id':50,'max':50.0,'cooldown':1 ,'state':True},
 51:{'name':'health generator','objects_id':51,'max':50.0,'cooldown':1 ,'state':True},
-52:{'name':'oxygen generator','objects_id':52,'max':100.0,'cooldown':50,'state':True},
+52:{'name':'oxygen generator','objects_id':52,'max':200.0,'cooldown':50,'state':True},
 53:{'name':'slime  generator','objects_id':53,'max':50.0,'cooldown':10,'state':True}
 }
 # name
@@ -79,6 +79,7 @@ objects_array=[]
 #На карте появляются враги(монстры), которые перемещаются, у них есть скорость, уровень агрессии, урон, здоровье.
 objects_enemy=50
 enemy_maxlevel=[0]
+enemy_blood_timer=60 #time in sec to see blood of killed enemies
 #убрать генерацию в функцию startobjects()
 #enemy=[[] for i in range(objects_enemy)]
 enemy_type=[
@@ -105,6 +106,8 @@ enemy_type=[
 # only in enemy list (init in startobjects()) :
 #9 - 0,1,2 or 3 move: enemy_move() - dirarray)
 #10 - FLAG enemy moved (False or True)
+#11 - time.time() - created or killed
+
 print ('cell size: '+str(cellsize))
 print ('grid_x:	'+str(grid_x))
 print ('grid_y:	'+str(grid_y))
@@ -165,7 +168,7 @@ mazelevels_target=[
 {'GOTO': [0,1,101-2,101-2],'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'very big level with 3 types of enemies and oxygen environment'}, #8
 {'GOTO': [0,1,201-2,201-2],'KILL': 0,   'PICK': 0, 'BOSS':0, 'TEXT':'super level with 4 types of enemies'}, #9
 {'GOTO': [0,1,201-2,201-2],'KILL': 100, 'PICK': 0, 'BOSS':0, 'TEXT':'open super level with 4 types of enemies and oxygen, kill 100 enemy!'}, #10
-{'GOTO': [0,1,201-2,201-2],'KILL': 500, 'PICK': 0, 'BOSS':0, 'TEXT':'super level with 2 types of agressive enemies, kill 500 enemy!'} #11
+{'GOTO': [0,1,201-2,201-2],'KILL': 500, 'PICK': 0, 'BOSS':0, 'TEXT':'super level with 2 types of agressive enemies and generators, kill 500 enemy!'} #11
 ]
 #GOTO - start and level complete player position. If [0,0,*,*] or [*,*,0,0] - generate START or EXIT points random
 #KILL - need to kill enemies for level complete
@@ -272,7 +275,7 @@ player_inventory=[
 ]
 # player inventory
 #	player_inventory[0] - текущий предмет
-#	0 - class 'WEAPON', 'KEY'
+#	0 - class 'WEAPON', 'KEY', 'MATERIAL' etc.
 #	1 - type in class, if 'WEAPON' weapons[0]
 #	2 - value, if 'WEAPON' - bullets количество пуль текущее, т.е. это small gun со 100 пулями
 #	3 - tick (current tick) - if 'WEAPON' max tick = weapons[0][4] cooldown , т.е. это значение растет за цикл, увеличиваясть до cooldown , после этого опять сбрасывается в 0 и можно снова выстрелить
