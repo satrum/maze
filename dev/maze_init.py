@@ -58,10 +58,14 @@ objects_ammo=0 #ammo for 50 bullets
 
 #generators and other objects:
 objects_dict={
-50:{'name':'energy generator','objects_id':50,'max':50.0,'cooldown':1 ,'state':True},
-51:{'name':'health generator','objects_id':51,'max':50.0,'cooldown':1 ,'state':True},
+50:{'name':'energy generator','objects_id':50,'max':50.0,'cooldown':1  ,'state':True},
+51:{'name':'health generator','objects_id':51,'max':50.0,'cooldown':1  ,'state':True},
 52:{'name':'oxygen generator','objects_id':52,'max':200.0,'cooldown':50,'state':True},
-53:{'name':'slime  generator','objects_id':53,'max':50.0,'cooldown':10,'state':True}
+53:{'name':'slime  generator','objects_id':53,'max':50.0 ,'cooldown':10,'state':True},
+54:{'name':'water  generator','objects_id':54,'max':200.0,'cooldown':50,'state':True},
+
+60:{'name':'small gun'       ,'objects_id':60,'type':0}, #weapons
+61:{'name':'minigun'         ,'objects_id':61,'type':1}  #weapons
 }
 # name
 # objects_id - number in maze_objects[][]
@@ -92,7 +96,7 @@ enemy_type=[
 [0,0,20,0,2,5,4 ,10,False], #5 heal=4 damage=10 cooldown=20 state - agressive move zoomenemy3
 [0,0,15,0,2,6,50,10,False,'BIG DOG ROBOT']  #6 heal=50 damage=10 cooldown=20 state - agressive move zoomenemy5 BOSS for 7 level
 ]
-#0 1 2  3 4 5 6  7  8
+#0 1 2s 3 4 5 6h 7d 8
 #0 - x
 #1 - y
 #2 - speed(10 act)
@@ -242,8 +246,8 @@ print('upgraded player: ',player_energy, player_oxygen, player_heal, player_dama
 
 #fire:
 weapons=[
-	[0,0,1,5,10,50,200,'small gun','gun1.png','bullet1.png'] #[0,0,1,5,10,50,200,'small gun','gun1.png','bullet1.png']
-	#test minigun [0,0,1,3,5,50,200,'small gun','gun1.png','bullet1.png']
+	[0,0,1,5,10,50,200,'small gun','gun1.png','bullet1.png'], #[0,0,1,5,10,50,200,'small gun','gun1.png','bullet1.png']
+	[1,0,2,3,5 ,50,200,'minigun'  ,'gun2.png','bullet2.png']
 ]
 #weapons:
 #		0 - типы вооружения (type(номер типа) = index in list
@@ -271,7 +275,8 @@ player_bullets=[]
 # пример: [0,weapons[0][3],0,weapons[0][5],player_x,player_y,player_x+direction[player_direction][0],player_y+direction[player_direction][1],player_direction,weapons[0][2]] - начало при выстреле
 player_inventory=[
 1,
-['WEAPON',0,100,0]
+['WEAPON',0,100,0],
+['WEAPON',1,50 ,0] #need remove, added for tests
 ]
 # player inventory
 #	player_inventory[0] - текущий предмет

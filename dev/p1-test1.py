@@ -674,13 +674,19 @@ def displayinfo():
 	mytext = myfont.render('player heal: '+str(player_heal),True,black)
 	gameDisplay.blit(mytext,(10,display_y+160))
 	#middle info
-	mytext = myfont.render('player bullets: '+str(player_inventory[player_inventory[0]][2]),True,black)
-	gameDisplay.blit(mytext,(300,display_y+20))
-	mytext = myfont.render('player weapon: '+str(weapons[player_inventory[player_inventory[0]][1]][7]),True,black)
-	gameDisplay.blit(mytext,(300,display_y))
 	mytext = myfont.render('hit accuracy: '+str( int( 100*(player_action['HIT']+1)/(player_action['FIRE']+1) ) ),True,black)
-	gameDisplay.blit(mytext,(300,display_y+40))
-	
+	gameDisplay.blit(mytext,(300,display_y))
+	#inventory item
+	if player_inventory[ player_inventory[0]][0]=='WEAPON': #if current item - weapon
+		weapontype=player_inventory[ player_inventory[0]][1] #type of current weapon
+		gameDisplay.blit(zoomweapon[weapontype][len(zoomsize)-1],(600,display_y)) #picture of weapon
+		#myfont = pygame.font.SysFont(font_def,20)
+		#mytext = myfont.render(str(weapons[weapontype][7]),True,black) #name of weapon
+		#gameDisplay.blit(mytext,(600,display_y))
+		myfont = pygame.font.SysFont(font_def,50)
+		mytext = myfont.render(str(player_inventory[player_inventory[0]][2]),True,black) #bullets
+		gameDisplay.blit(mytext,(700,display_y+30))
+
 
 #display scanner in radius of half of level size. In DEV 
 def displayscanner(scanner_mode,tick):
@@ -1224,6 +1230,7 @@ zoomenergy=[pygame.transform.scale(energy,(size,size)) for size in zoomsize]
 oxygen = pygame.image.load('oxygen4.png').convert()
 zoomoxygen=[pygame.transform.scale(oxygen,(size,size)) for size in zoomsize]
 movingblock = pygame.image.load('wall2.png').convert()
+
 zoommovingblock=[pygame.transform.smoothscale(movingblock,(size,size)) for size in zoomsize]
 enemyimg1 = pygame.image.load('enemy2.png').convert()
 zoomenemy1=[pygame.transform.smoothscale(enemyimg1,(size,size)) for size in zoomsize]
@@ -1235,6 +1242,7 @@ enemyimg4 = pygame.image.load('enemy4.png').convert()
 zoomenemy4=[pygame.transform.smoothscale(enemyimg4,(size,size)) for size in zoomsize]
 enemyimg5 = pygame.image.load('enemy5.png').convert()
 zoomenemy5=[pygame.transform.smoothscale(enemyimg5,(size,size)) for size in zoomsize]
+
 health = pygame.image.load('health1.png').convert()
 zoomhealth=[pygame.transform.scale(health,(size,size)) for size in zoomsize]
 hole = pygame.image.load('hole1.png').convert()
@@ -1250,9 +1258,16 @@ zoom_gen_heal  =[pygame.transform.scale(gen_heal_img  ,(size,size)) for size in 
 gen_oxygen_img   = pygame.image.load('generator3.png').convert()
 zoom_gen_oxygen  =[pygame.transform.scale(gen_oxygen_img  ,(size,size)) for size in zoomsize]
 bloodimg   = pygame.image.load('blood.png').convert()
-zoomblood =[pygame.transform.scale(bloodimg  ,(size,size)) for size in zoomsize]
+zoomblood =[pygame.transform.scale(bloodimg,(size,size)) for size in zoomsize]
 offimg = pygame.image.load('off.png').convert()
-zoomoff =[pygame.transform.scale(offimg  ,(size,size)) for size in zoomsize]
+zoomoff =[pygame.transform.scale(offimg,(size,size)) for size in zoomsize]
+
+#weapons:
+zoomweapon=[]
+weapon1_img=pygame.image.load(weapons[0][8]).convert() #small gun
+zoomweapon.append([pygame.transform.scale(weapon1_img,(size,size)) for size in zoomsize])
+weapon2_img=pygame.image.load(weapons[1][8]).convert() #small gun
+zoomweapon.append([pygame.transform.scale(weapon2_img,(size,size)) for size in zoomsize])
 '''
 arrow_up = pygame.image.load('arrow_up.png').convert()
 zoomarrow_up=[pygame.transform.scale(arrow_up,(size,size)) for size in zoomsize]
@@ -1286,6 +1301,8 @@ for i in range(len(zoomsize)):
 	zoom_gen_oxygen[i].set_colorkey((15539236)) #red
 	zoomblood[i].set_colorkey((16777215)) #white
 	zoomoff[i].set_colorkey((16777215)) #white
+	for j in range(2):
+		zoomweapon[j][i].set_colorkey((16777215)) #white
 	'''
 	zoomarrow_up[i].set_colorkey((16777215))
 	zoomarrow_down[i].set_colorkey((16777215))
@@ -1568,6 +1585,10 @@ def gameloop():
 						if maze_objects[player_y][player_x]>=50 and maze_objects[player_y][player_x]<=53: #if GENERATOR
 							for obj in objects_array:
 								if obj[3]==player_x and obj[4]==player_y: obj[2]=not(obj[2]) #turn on/off generator
+					if event.key == pygame.K_c:#change item in inventory, change weapon etc.
+						player_inventory[0]+=1
+						if player_inventory[0]>=len(player_inventory):player_inventory[0]=1
+						print(player_inventory[0], len(player_inventory))
 					
 		#gameDisplay.fill(white) #fill display - убрал, так как в displayinfo() заливается нижняя часть белым цветом
 		displaymaze(act) #display maze
