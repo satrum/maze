@@ -52,13 +52,13 @@ del randomarray
 print(randomsurface.get_alpha())
 gameDisplay.blit(randomsurface,(300,300))
 
-energy = pygame.image.load('gun1.png').convert()
+energy = pygame.image.load('ammo1.png').convert()
 zoomenergy=pygame.transform.scale(energy,(cellsize,cellsize))
 zoomenergy=pygame.transform.rotate(zoomenergy,90)
 zoomenergy_array=pygame.PixelArray(zoomenergy)
 print(zoomenergy_array)
 del zoomenergy_array
-zoomenergy.set_colorkey((16777215))
+zoomenergy.set_colorkey((15539236))
 gameDisplay.blit(zoomenergy,(400,300))
 
 
@@ -94,6 +94,10 @@ sound.append(pygame.mixer.Sound('sounds/sound2.ogg'))
 sound[0].play(0,500)
 print('gl:',sound[0].get_length())
 #print(sound[0].get_raw())
+
+
+
+if type(0)==int: print ('integer')
 
 # test 'a' get_pressed()
 clock = pygame.time.Clock()

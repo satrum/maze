@@ -103,7 +103,7 @@ def startmaze():
 
 #generate objects in maze: GLOBAL - maze, objects_energy, objects_oxygen, grid_x, grid_y
 def startobjects():
-	global maze, enemy, objects_array
+	global maze, enemy, objects_array, pick_array
 	objectsmaze=[[]]
 	print(objectsmaze, grid_x, grid_y)
 	objectsmaze=[[maze[y][x] for x in range(grid_x)] for y in range(grid_y)]
@@ -129,13 +129,17 @@ def startobjects():
 		if objectsmaze[y*2+1][x*2+2]==0:
 			objectsmaze[y*2+1][x*2+2]=6
 			count-=1
-	count=objects_ammo #в коридорах
-	while count>0:
-		x=random.randrange(int((grid_x-1)/2)-1)
-		y=random.randrange(int((grid_y-1)/2))
-		if objectsmaze[y*2+1][x*2+2]==0:
-			objectsmaze[y*2+1][x*2+2]=8
-			count-=1
+	for i in range(len(objects_ammo)):
+		count=objects_ammo[i] #в коридорах
+		while count>0:
+			x=random.randrange(int((grid_x-1)/2)-1)
+			y=random.randrange(int((grid_y-1)/2))
+			if objectsmaze[y*2+1][x*2+2]==0:
+				if i==0:
+					objectsmaze[y*2+1][x*2+2]=8
+				if i==1:
+					objectsmaze[y*2+1][x*2+2]=9
+				count-=1
 	count=objects_hole #вместо стен
 	while count>0:
 		x=random.randrange(int(grid_x-2))+1
@@ -185,9 +189,29 @@ def startobjects():
 	for i in objects_array: 
 		print(objects_dict[ i[0] ]['name'],i) #print special objects
 
+	#generate objects for PICK:
+	#test 'PICK':
+	current_level=mazenumber
+	j=len(mazelevels) #длина массива уровней
+	if current_level>=j: current_level=j-1 #уровень не превышает последний
+	pick_array=[]
+	if type(mazelevels_target[current_level]['PICK'])==list: #если в задании PICK есть список
+		for object_pick in mazelevels_target[current_level]['PICK']:
+			count=object_pick[1] #количество объектов
+			while count>0:
+				x=random.randrange(int((grid_x-1)/2)-1)
+				y=random.randrange(int((grid_y-1)/2))
+				if objectsmaze[y*2+1][x*2+2]==0:
+					objectsmaze[y*2+1][x*2+2]=object_pick[0]
+					print('generated pick:',object_pick[0],objects_dict[object_pick[0]]['name'],x*2+2,y*2+1)
+					pick_array.append([ object_pick[0],object_pick[2],True,x*2+2,y*2+1 ])
+					count-=1
+	print(pick_array)
+
+
 	count=0 # генерация врагов в коридорах
 	enemy=[[] for i in range(objects_enemy)]
-	#test BOSS:
+	#test 'BOSS':
 	current_level=mazenumber
 	j=len(mazelevels) #длина массива уровней
 	if current_level>=j: current_level=j-1 #уровень не превышает последний
@@ -476,8 +500,11 @@ def displaymaze(activity):
 							gameDisplay.blit(zoomhealth[image_index],(x,y))
 						if maze_objects[j][i]==7:
 							gameDisplay.blit(zoomhole[image_index],(x,y))
-						if maze_objects[j][i]==8:
-							gameDisplay.blit(zoomammo[image_index],(x,y))
+						if maze_objects[j][i]==8: #small gun bullets
+							gameDisplay.blit(zoomammo1[image_index],(x,y))
+						if maze_objects[j][i]==9: #minigun bullets
+							gameDisplay.blit(zoomammo2[image_index],(x,y))
+						#display generators
 						if maze_objects[j][i]==50: #energy generator
 							gameDisplay.blit(zoom_gen_energy[image_index],(x,y))
 							for k in range(len(objects_array)): #найти нужный объект
@@ -502,6 +529,17 @@ def displaymaze(activity):
 								gameDisplay.blit(zoomoff[image_index],(x,y))
 							#расчет процента ресурса и отрисовка
 							pygame.draw.line(gameDisplay, red, (x,y+2),(x+int(objects_array[obj_index][1]*cellsize/objects_dict[52]['max']),y+2))
+						# display weapons
+						if maze_objects[j][i]==60: #small gun
+							gameDisplay.blit(zoomweapon[0][image_index],(x,y))
+						if maze_objects[j][i]==61: #minigun
+							gameDisplay.blit(zoomweapon[1][image_index],(x,y))
+						# display material
+						if maze_objects[j][i]==70: #small gun
+							gameDisplay.blit(zoommaterial[0][image_index],(x,y))
+						if maze_objects[j][i]==71: #minigun
+							gameDisplay.blit(zoommaterial[1][image_index],(x,y))
+							
 						#if maze_objects[j][i]==5:
 							#enemy_index=[enemy.index(k) for k in enemy if k[0]==i and k[1]==j and k[8]==False][0]#найти врага, cool!
 							
@@ -568,7 +606,7 @@ def displaymaze(activity):
 				gameDisplay.blit(zoomenemy2[image_index],(enemy_x,enemy_y))
 			elif k[5]==2 or k[5]==5:
 				gameDisplay.blit(zoomenemy3[image_index],(enemy_x,enemy_y))
-			elif k[5]==3:
+			elif k[5]==3 or k[5]==7:
 				gameDisplay.blit(zoomenemy4[image_index],(enemy_x,enemy_y))
 			elif k[5]==6:
 				gameDisplay.blit(zoomenemy5[image_index],(enemy_x,enemy_y))
@@ -685,6 +723,12 @@ def displayinfo():
 		#gameDisplay.blit(mytext,(600,display_y))
 		myfont = pygame.font.SysFont(font_def,50)
 		mytext = myfont.render(str(player_inventory[player_inventory[0]][2]),True,black) #bullets
+		gameDisplay.blit(mytext,(700,display_y+30))
+	if player_inventory[ player_inventory[0]][0]=='MATERIAL': #if current item - material
+		materialtype=player_inventory[ player_inventory[0]][1] #type of current material
+		gameDisplay.blit(zoommaterial[materialtype][len(zoomsize)-1],(600,display_y)) #picture of material
+		myfont = pygame.font.SysFont(font_def,50)
+		mytext = myfont.render(str(player_inventory[player_inventory[0]][2]),True,black) #quantity of material
 		gameDisplay.blit(mytext,(700,display_y+30))
 
 
@@ -1075,9 +1119,10 @@ def helpscreen():
 
 #display level discription:
 def display_level_target():
+	global pick_array
 	#параметры и описание уровня:
-	pygame.draw.rect(gameDisplay,black,(35,35,600,250))
-	pygame.draw.rect(gameDisplay,green,(35,35,600,250),1)
+	pygame.draw.rect(gameDisplay,black,(35,35,600,290))
+	pygame.draw.rect(gameDisplay,green,(35,35,600,290),1)
 	i=len(mazelevels) #длина массива уровней
 	current_level=mazenumber
 	if current_level>=i: current_level=i-1 #уровень не превышает последний
@@ -1102,6 +1147,20 @@ def display_level_target():
 	if mazelevels_target[current_level]['BOSS']>0:
 		mytext = myfont.render('BOSS ON LEVEL:'+str(enemy_type[ mazelevels_target[current_level]['BOSS'] ][9]), True, white)
 		gameDisplay.blit(mytext,(40,240))
+	
+	if type(mazelevels_target[current_level]['PICK'])==list:
+		level_pick=mazelevels_target[current_level]['PICK']
+		text_pick='NEED to PICK: '
+		for i in level_pick:
+			if text_pick!='NEED to PICK: ': text_pick+=', '
+			if i[2]==True:
+				count_picked=0
+				for j in pick_array:
+					if j[0]==i[0] and j[2]==False: count_picked+=1 #если предмет совпадает и собран с карты
+				if count_picked>i[1]: count_picked=i[1] 
+				text_pick=text_pick+str(i[1]-count_picked)+' '+objects_dict[i[0]]['name']
+		mytext = myfont.render(text_pick, True, white)
+		gameDisplay.blit(mytext,(40,280))
 
 #menu before start gameloop
 def main_menu():
@@ -1247,8 +1306,12 @@ health = pygame.image.load('health1.png').convert()
 zoomhealth=[pygame.transform.scale(health,(size,size)) for size in zoomsize]
 hole = pygame.image.load('hole1.png').convert()
 zoomhole=[pygame.transform.scale(hole,(size,size)) for size in zoomsize]
-ammo_image = pygame.image.load('ammo3.png').convert()
-zoomammo=[pygame.transform.scale(ammo_image,(size,size)) for size in zoomsize]
+#ammo for weapons:
+ammo1_image = pygame.image.load('ammo3.png').convert()
+zoomammo1=[pygame.transform.scale(ammo1_image,(size,size)) for size in zoomsize]
+ammo2_image = pygame.image.load('ammo1.png').convert()
+zoomammo2=[pygame.transform.scale(ammo2_image,(size,size)) for size in zoomsize]
+
 exit_image = pygame.image.load('exit1.png').convert()
 zoomexit=[pygame.transform.smoothscale(exit_image,(size,size)) for size in zoomsize]
 gen_energy_img = pygame.image.load('generator1.png').convert()
@@ -1268,7 +1331,14 @@ weapon1_img=pygame.image.load(weapons[0][8]).convert() #small gun
 zoomweapon.append([pygame.transform.scale(weapon1_img,(size,size)) for size in zoomsize])
 weapon2_img=pygame.image.load(weapons[1][8]).convert() #small gun
 zoomweapon.append([pygame.transform.scale(weapon2_img,(size,size)) for size in zoomsize])
-'''
+#material
+zoommaterial=[]
+material1_img=pygame.image.load('material1.png').convert() #small gun
+zoommaterial.append([pygame.transform.scale(material1_img,(size,size)) for size in zoomsize])
+material2_img=pygame.image.load('material2.png').convert() #small gun
+zoommaterial.append([pygame.transform.scale(material2_img,(size,size)) for size in zoomsize])
+#print('zoomweapon:',zoomweapon)
+
 arrow_up = pygame.image.load('arrow_up.png').convert()
 zoomarrow_up=[pygame.transform.scale(arrow_up,(size,size)) for size in zoomsize]
 arrow_down = pygame.image.load('arrow_down.png').convert()
@@ -1277,7 +1347,7 @@ arrow_left = pygame.image.load('arrow_left.png').convert()
 zoomarrow_left=[pygame.transform.scale(arrow_left,(size,size)) for size in zoomsize]
 arrow_right = pygame.image.load('arrow_right.png').convert()
 zoomarrow_right=[pygame.transform.scale(arrow_right,(size,size)) for size in zoomsize]
-'''
+
 bullet1=pygame.image.load('bullet1.png').convert()
 #bullet1=pygame.image.load('bullet2.png').convert()
 zoombullet1=[[],[],[],[]]
@@ -1295,7 +1365,8 @@ for i in range(len(zoomsize)):
 	zoomenergy[i].set_colorkey((15539236)) #red
 	zoomoxygen[i].set_colorkey((16777215)) #white
 	zoomhole[i].set_colorkey((16777215))
-	zoomammo[i].set_colorkey((15539236))
+	zoomammo1[i].set_colorkey((15539236))
+	zoomammo2[i].set_colorkey((15539236))
 	zoom_gen_energy[i].set_colorkey((15539236)) #red
 	zoom_gen_heal[i].set_colorkey((15539236)) #red
 	zoom_gen_oxygen[i].set_colorkey((15539236)) #red
@@ -1303,12 +1374,14 @@ for i in range(len(zoomsize)):
 	zoomoff[i].set_colorkey((16777215)) #white
 	for j in range(2):
 		zoomweapon[j][i].set_colorkey((16777215)) #white
-	'''
+	for j in range(2):
+		zoommaterial[j][i].set_colorkey((16777215)) #white
+	
 	zoomarrow_up[i].set_colorkey((16777215))
 	zoomarrow_down[i].set_colorkey((16777215))
 	zoomarrow_left[i].set_colorkey((16777215))
 	zoomarrow_right[i].set_colorkey((16777215))
-	'''
+	
 	for j in range(len(zoombullet1)):
 		zoombullet1[j][i].set_colorkey((16777215))
 #zoomoxygen.set_alpha(128)
@@ -1357,6 +1430,7 @@ def gameloop():
 	global player_bullets
 	global objects_array
 	global player_display_x, player_display_y
+	global pick_array
 	act=['',0] #действие игрока текущее и длительность в тиках
 	#act['MOVE',10]
 	#act['MOVE BLOCK',15]
@@ -1367,6 +1441,15 @@ def gameloop():
 	y_complete=EXIT[1]
 	kill_complete=mazelevels_target[current_level]['KILL']
 	boss_complete=mazelevels_target[current_level]['BOSS']
+	pick_complete=0
+	if type(mazelevels_target[current_level]['PICK'])==list:
+		for i in mazelevels_target[current_level]['PICK']:
+			if i[2]==True:
+				print('need to pick:',i[1],' ',objects_dict[i[0]]['name'])
+				pick_complete+=i[1]
+			else: print('you can pick:',i[1],' ',objects_dict[i[0]]['name'])
+	print('need to pick:',pick_complete, pick_array)
+
 	print('goto x:'+str(x_complete)+' y:'+str(y_complete)+' kill:'+str(kill_complete)+' boss:'+str(boss_complete))
 
 	while True:
@@ -1534,7 +1617,7 @@ def gameloop():
 			current_weapon=player_inventory[player_inventory[0]][1] #тип оружия
 			if player_inventory[player_inventory[0]][3]>=weapons[current_weapon][4]: #если достигло cooldown
 				player_inventory[player_inventory[0]][3]=0 #сбросить счетчик tick
-				if player_inventory[player_inventory[0]][2]>0:
+				if player_inventory[player_inventory[0]][2]>0: #если есть патроны (для оружия с расходниками, не энергетическое)
 					print('fire')
 					sound_start(0,0,500) #включить звук выстрела(sound[0]) один раз (0), на 0.3сек (300)
 					weapon_fire() #сделать выстрел, потратить пулю в оружии, создать пулю					
@@ -1615,11 +1698,24 @@ def gameloop():
 			if player_heal>upgrades['HEALTH_MAX'][player_upgrades['HEALTH_MAX']]: player_heal=upgrades['HEALTH_MAX'][player_upgrades['HEALTH_MAX']]
 			maze_objects[player_y][player_x]=0
 			player_action['PICK']+=1
-		#test pick ammo:
+		#test pick ammo for small gun:
 		if maze_objects[player_y][player_x]==8:
 			inventory_index=0
 			for i in range(1,len(player_inventory)):
 				if player_inventory[i][0]=="WEAPON" and player_inventory[i][1]==0: #if player have weapon and type=0 (small gun)
+					inventory_index=i
+			if inventory_index>0: #if player have gun
+				player_inventory[inventory_index][2]+=50
+				bullets_maximum=upgrades['BULLETS_MAX'][player_upgrades['BULLETS_MAX']]*weapons[0][6]//100 #расчет максимума пуль для оружия по апгрейдам
+				if player_inventory[inventory_index][2]>bullets_maximum: #bullets in weapon no more when maximum in small gun
+					player_inventory[inventory_index][2]=bullets_maximum
+				maze_objects[player_y][player_x]=0
+				player_action['PICK']+=1
+		#test pick ammo for minigun:
+		if maze_objects[player_y][player_x]==9:
+			inventory_index=0
+			for i in range(1,len(player_inventory)):
+				if player_inventory[i][0]=="WEAPON" and player_inventory[i][1]==1: #if player have weapon and type=1 (minigun)
 					inventory_index=i
 			if inventory_index>0: #if player have gun
 				player_inventory[inventory_index][2]+=50
@@ -1648,6 +1744,63 @@ def gameloop():
 				player_heal+=1
 				objects_array[obj_index][1]-=1
 				print('player pick health from generator')
+		#test pick any type of WEAPON:
+		if maze_objects[player_y][player_x] in [60,61,62,63,64,65,66,67,68,69]: #если оружие
+			pick_object=maze_objects[player_y][player_x] #номер объекта
+			print('picked weapon!!! type:'+objects_dict[pick_object]['name'])
+			FLAG_ADDED=False
+			if player_inventory[player_inventory[0]][0]=='EMPTY':  
+				player_inventory.pop(player_inventory[0]) #если инвентарь пустой
+				player_inventory.append(['WEAPON',objects_dict[pick_object]['type'],50,0]) #добавить в inventory запись WEAPON и 50 патронов
+				FLAG_ADDED=True #объект добавлен
+			for i in range(1,len(player_inventory)):
+				if player_inventory[i][0]=='WEAPON' and FLAG_ADDED==False:
+					if player_inventory[i][1]==objects_dict[pick_object]['type'] :
+						player_inventory[i][2]+=50 #добавил к уже собранным
+						FLAG_ADDED=True
+			if FLAG_ADDED==False:
+				player_inventory.append(['WEAPON',objects_dict[pick_object]['type'],50,0]) #собрал первый раз
+				FLAG_ADDED=True #объект добавлен
+
+			maze_objects[player_y][player_x]=0
+			player_action['PICK']+=1
+			if pick_complete>0: #если объект - часть задания на 'PICK'
+				for i in mazelevels_target[current_level]['PICK']:
+					if i[2]==True and i[0]==pick_object: pick_complete-=1 #если предмет обязателен и есть в задании
+			for i in pick_array:
+				if i[3]==player_x and i[4]==player_y: #если предмет найден в списке
+					i[2]=False #помечается как убранный с карты 
+			print(player_inventory)
+			print('need to pick:',pick_complete, pick_array)
+		
+		#test pick any type of MATERIAL:
+		if maze_objects[player_y][player_x] in [70,71,72,73,74,75,76,77,78,79]: #если материал
+			pick_object=maze_objects[player_y][player_x] #номер объекта
+			print('picked material!!! type:'+objects_dict[pick_object]['name'])
+			FLAG_ADDED=False
+			if player_inventory[player_inventory[0]][0]=='EMPTY':  
+				player_inventory.pop(player_inventory[0]) #если инвентарь пустой
+				player_inventory.append(['MATERIAL',objects_dict[pick_object]['type'],1,0]) #собрал первый раз
+				FLAG_ADDED=True #объект добавлен
+			for i in range(1,len(player_inventory)):
+				if player_inventory[i][0]=='MATERIAL' and FLAG_ADDED==False:
+					if player_inventory[i][1]==objects_dict[pick_object]['type'] :
+						player_inventory[i][2]+=1 #добавил к уже собранным
+						FLAG_ADDED=True
+			if FLAG_ADDED==False:
+				player_inventory.append(['MATERIAL',objects_dict[pick_object]['type'],1,0]) #собрал первый раз
+				FLAG_ADDED=True #объект добавлен
+			
+			maze_objects[player_y][player_x]=0
+			player_action['PICK']+=1
+			if pick_complete>0: #если объект - часть задания на 'PICK'
+				for i in mazelevels_target[current_level]['PICK']:
+					if i[2]==True and i[0]==pick_object: pick_complete-=1 #если предмет обязателен и есть в задании
+			for i in pick_array:
+				if i[3]==player_x and i[4]==player_y: #если предмет найден в списке
+					i[2]=False #помечается как убранный с карты
+			print(player_inventory)
+			print('need to pick:',pick_complete, pick_array)
 
 		#test level complete:
 		#test GOTO and KILL complete
@@ -1655,7 +1808,7 @@ def gameloop():
 		if player_x==x_complete and player_y==y_complete:
 			if boss_complete>0 and enemy[0][8]==True: #если есть босс и он убит (босс всегда генериться нулевым в списке врагов)
 				boss_complete=0 #сбросить уромень босса в 0 - т.е. босса нет
-			if kill_complete<=player_action['KILL'] and boss_complete==0: #если убито достаточно врагов и босса нет
+			if kill_complete<=player_action['KILL'] and boss_complete==0 and pick_complete==0: #если убито достаточно врагов и босса нет(или убит) и собраны все предметы
 				mazenumber+=1
 				update_expirience()
 				#startlevel()
@@ -1677,7 +1830,7 @@ def gameloop():
 			player_expirience=0 #сброс накопленного опыта
 			mazenumber=0 #сброс на начальный уровень
 			player_upgrades={'EXP':0,'ENERGY_MAX':0,'OXYGEN_MAX':0,'HEALTH_MAX':0,'SPEED_TICK':0,'FOG_RADIUS':0,'MELEE_DAMAGE':0,'OXYGEN_TIME':0,'OXYGEN_ENERGY':0,'BULLETS_MAX':0}
-			player_inventory=[1,['WEAPON',0,0,0]]
+			player_inventory=[1,['EMPTY',0,0,0]]
 			#startlevel()
 			'''
 			mazelevels_update(mazenumber) #считывание глобальных параметров уровня
