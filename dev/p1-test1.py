@@ -268,6 +268,7 @@ def next_env(env_maze,env_name): #таблица среды и имя среды
 	#print('\n')
 	#растекание среды:
 	env_change=[[0 for x in range(grid_x)] for y in range(grid_y)]
+	#test time
 	for x in range(1,grid_x-1):
 		for y in range(1,grid_y-1):
 			if env_maze[y][x]>3:
@@ -287,6 +288,7 @@ def next_env(env_maze,env_name): #таблица среды и имя среды
 			else:
 				if env_name=='OXYGEN':
 					env_maze[y][x]=0 #if concentration<4 -> oxygen=0
+	
 	#обмен матриц старой и новой:
 	if env_name=='OXYGEN':
 		for x in range(1,grid_x-1):
@@ -617,7 +619,11 @@ def displaymaze(activity):
 				enemy_dy=int(dirarray[enemy_direction][1]*cellsize*enemy_act/enemy_speed)
 				enemy_x-=enemy_dx
 				enemy_y-=enemy_dy
-			gameDisplay.blit(zoomblood[image_index],(enemy_x,enemy_y))
+			if slime_level>0:
+				if k[5]==slimes[slime_level]['level']:
+					gameDisplay.blit(zoombloodslime[image_index],(enemy_x,enemy_y))
+				else:gameDisplay.blit(zoomblood[image_index],(enemy_x,enemy_y))
+			else:gameDisplay.blit(zoomblood[image_index],(enemy_x,enemy_y))
 	
 	#display live enemies
 	enemy_display_count=0 #calculate displayed enemies
@@ -1410,6 +1416,8 @@ gen_food_img   = pygame.image.load('generator4.png').convert()
 zoom_gen_food  =[pygame.transform.scale(gen_food_img  ,(size,size)) for size in zoomsize]
 bloodimg   = pygame.image.load('blood.png').convert()
 zoomblood =[pygame.transform.scale(bloodimg,(size,size)) for size in zoomsize]
+bloodslimeimg   = pygame.image.load('bloodslime.png').convert()
+zoombloodslime =[pygame.transform.scale(bloodslimeimg,(size,size)) for size in zoomsize]
 offimg = pygame.image.load('off.png').convert()
 zoomoff =[pygame.transform.scale(offimg,(size,size)) for size in zoomsize]
 
@@ -1461,6 +1469,7 @@ for i in range(len(zoomsize)):
 	zoom_gen_oxygen[i].set_colorkey((15539236)) #red
 	zoom_gen_food[i].set_colorkey((15539236)) #red
 	zoomblood[i].set_colorkey((16777215)) #white
+	zoombloodslime[i].set_colorkey((0x000000)) #black
 	zoomoff[i].set_colorkey((16777215)) #white
 	for j in range(2):
 		zoomweapon[j][i].set_colorkey((16777215)) #white
@@ -1947,14 +1956,18 @@ def gameloop():
 		#change environment (oxygen) with env_speed tick
 		#print(concentration_oxygen, env_speed['OXYGEN'][1])
 		if env_speed['OXYGEN'][1]<=0 and concentration_oxygen>0:
+			timer=time.time() #test time
 			maze_oxygen=next_env(maze_oxygen,'OXYGEN')
+			print(time.time()-timer) #test time
 			env_speed['OXYGEN'][1]=env_speed['OXYGEN'][0]
 			#for i in range(grid_y):
 			#	print (maze_oxygen[i])
 		env_speed['OXYGEN'][1]-=1
 		#change environment (food) with env_speed tick
 		if env_speed['FOOD'][1]<=0 and concentration_food>0:
+			timer=time.time() #test time
 			maze_food=next_env(maze_food,'FOOD')
+			print(time.time()-timer) #test time
 			env_speed['FOOD'][1]=env_speed['FOOD'][0]
 		if slime_level>0:
 			slime_new_enemy()
