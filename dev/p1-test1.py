@@ -177,7 +177,7 @@ def startobjects():
 			maze[y][x]=0
 			count-=1
 			objects_array.append([ 51,objects_dict[51]['max'],objects_dict[51]['state'],x,y ])
-	count=objects_oxygen_gen #вместо стен heal generators
+	count=objects_oxygen_gen #вместо стен oxygen generators
 	while count>0:
 		x=random.randrange(int(grid_x-2))+1
 		y=random.randrange(int(grid_y-2))+1
@@ -186,6 +186,15 @@ def startobjects():
 			maze[y][x]=0
 			count-=1
 			objects_array.append([ 52,objects_dict[52]['max'],objects_dict[52]['state'],x,y ])
+	count=objects_food_gen #вместо стен food generators
+	while count>0:
+		x=random.randrange(int(grid_x-2))+1
+		y=random.randrange(int(grid_y-2))+1
+		if maze[y][x]==1:
+			objectsmaze[y][x]=53
+			maze[y][x]=0
+			count-=1
+			objects_array.append([ 53,objects_dict[53]['max'],objects_dict[53]['state'],x,y ])
 	for i in objects_array: 
 		print(objects_dict[ i[0] ]['name'],i) #print special objects
 
@@ -254,9 +263,10 @@ def start_env(concentration):
 	return env_maze
 
 #change concentration: maze_oxygen
-def next_env(env_maze): #таблица среды и имя среды
+def next_env(env_maze,env_name): #таблица среды и имя среды
 	global objects_array
 	#print('\n')
+	#растекание среды:
 	env_change=[[0 for x in range(grid_x)] for y in range(grid_y)]
 	for x in range(1,grid_x-1):
 		for y in range(1,grid_y-1):
@@ -275,17 +285,31 @@ def next_env(env_maze): #таблица среды и имя среды
 					env_change[y+1][x]+=stream
 					env_maze[y][x]-=stream
 			else:
-				env_maze[y][x]=0 #if concentration<4 -> oxygen=0
-	for x in range(1,grid_x-1):
-		for y in range(1,grid_y-1):
-			if maze_objects[y][x]==7: #яма обнуляет кислород (in hole oxygen=0)
-				env_maze[y][x]=0
-			else:
+				if env_name=='OXYGEN':
+					env_maze[y][x]=0 #if concentration<4 -> oxygen=0
+	#обмен матриц старой и новой:
+	if env_name=='OXYGEN':
+		for x in range(1,grid_x-1):
+			for y in range(1,grid_y-1):
+				if maze_objects[y][x]==7: #яма обнуляет кислород (in hole oxygen=0)
+					env_maze[y][x]=0
+				else:
+					env_maze[y][x]+=env_change[y][x]
+	if env_name=='FOOD':
+		for x in range(1,grid_x-1):
+			for y in range(1,grid_y-1):
 				env_maze[y][x]+=env_change[y][x]
-	for obj in objects_array:
-		if obj[0]==52 and obj[1]>=objects_dict[52]['max']: #если объект - генератор кислорода и уровень кислорода на максимуме
-			env_maze[ obj[4] ][ obj[3] ]=obj[1] #кислород весь попадает во внешнюю среду
-			obj[1]=0 #генератор кислорода опустошается
+	#генераторы:
+	if env_name=='OXYGEN':
+		for obj in objects_array:
+			if obj[0]==52 and obj[1]>=objects_dict[52]['max']: #если объект - генератор кислорода и уровень кислорода на максимуме
+				env_maze[ obj[4] ][ obj[3] ]=obj[1] #кислород весь попадает во внешнюю среду
+				obj[1]=0 #генератор кислорода опустошается
+	if env_name=='FOOD':
+		for obj in objects_array:
+			if obj[0]==53 and obj[1]>=objects_dict[53]['max']: #если объект - генератор еды и уровень еды на максимуме
+				env_maze[ obj[4] ][ obj[3] ]=obj[1] #еда вся попадает во внешнюю среду
+				obj[1]=0 #генератор еды опустошается
 	#for i in range(grid_y):
 	#	print (env_maze[i])
 	return env_maze
@@ -412,6 +436,7 @@ def enemy_move():
 					enemy[i][11]=time.time() #time of killed
 					maze_objects[enemy[i][1]][enemy[i][0]]=0 #враг удаляется из предметов
 					player_action['KILL']+=1 #увеличиваем статистику убийств
+					if slime_level>0: slime_kill_enemy(enemy_x,enemy_y,enemy[i][5]) #generate food after kill if slime on level
 			elif enemy_x==0 or enemy_x==grid_x-1 or enemy_y==0 or enemy_y==grid_y-1: #враг не может войти в крайние поля лабиринта
 				#print('монстр попытался выйти',enemy_x,enemy_y)
 				newdirection=random.randrange(4) #random move
@@ -504,6 +529,7 @@ def displaymaze(activity):
 							gameDisplay.blit(zoomammo1[image_index],(x,y))
 						if maze_objects[j][i]==9: #minigun bullets
 							gameDisplay.blit(zoomammo2[image_index],(x,y))
+						
 						#display generators
 						if maze_objects[j][i]==50: #energy generator
 							gameDisplay.blit(zoom_gen_energy[image_index],(x,y))
@@ -529,6 +555,15 @@ def displaymaze(activity):
 								gameDisplay.blit(zoomoff[image_index],(x,y))
 							#расчет процента ресурса и отрисовка
 							pygame.draw.line(gameDisplay, red, (x,y+2),(x+int(objects_array[obj_index][1]*cellsize/objects_dict[52]['max']),y+2))
+						if maze_objects[j][i]==53: #food generator
+							gameDisplay.blit(zoom_gen_food[image_index],(x,y))
+							for k in range(len(objects_array)): #найти нужный объект
+								if i==objects_array[k][3] and j==objects_array[k][4]: obj_index=k
+							if objects_array[obj_index][2]==False:
+								gameDisplay.blit(zoomoff[image_index],(x,y))
+							#расчет процента ресурса и отрисовка
+							pygame.draw.line(gameDisplay, red, (x,y+2),(x+int(objects_array[obj_index][1]*cellsize/objects_dict[53]['max']),y+2))
+						
 						# display weapons
 						if maze_objects[j][i]==60: #small gun
 							gameDisplay.blit(zoomweapon[0][image_index],(x,y))
@@ -558,6 +593,9 @@ def displaymaze(activity):
 						#display env oxygen
 						if maze_oxygen[j][i]>0 and FLAG_SCANNER:
 							pygame.draw.line(gameDisplay, blue, (x,y+1),(x+int(maze_oxygen[j][i]*cellsize/concentration_oxygen),y+1))
+						#display env food
+						if maze_food[j][i]>0 and FLAG_SCANNER:
+							pygame.draw.line(gameDisplay, red, (x,y+3),(x+int(maze_food[j][i]*cellsize/concentration_food),y+3))
 					else:
 						pygame.draw.rect(gameDisplay, black, (x,y,cellsize,cellsize)) #fog of war
 
@@ -610,6 +648,8 @@ def displaymaze(activity):
 				gameDisplay.blit(zoomenemy4[image_index],(enemy_x,enemy_y))
 			elif k[5]==6:
 				gameDisplay.blit(zoomenemy5[image_index],(enemy_x,enemy_y))
+			elif k[5]==8 or k[5]==9:
+				gameDisplay.blit(zoomenemy6[image_index],(enemy_x,enemy_y))
 			enemy_heal=int(k[6]*cellsize/enemy_type[ k[5] ][6]) #расчет процента здоровья врага
 			pygame.draw.line(gameDisplay, red, (enemy_x,enemy_y),(enemy_x+enemy_heal,enemy_y))
 	#print ('count display enemy by tick:'+str(enemy_display_count)) #print count of displayed enemies
@@ -714,6 +754,8 @@ def displayinfo():
 	#middle info
 	mytext = myfont.render('hit accuracy: '+str( int( 100*(player_action['HIT']+1)/(player_action['FIRE']+1) ) ),True,black)
 	gameDisplay.blit(mytext,(300,display_y))
+	mytext = myfont.render('env food: '+str(maze_food[player_y][player_x]),True,black)
+	gameDisplay.blit(mytext,(300,display_y+20))
 	#inventory item
 	if player_inventory[ player_inventory[0]][0]=='WEAPON': #if current item - weapon
 		weapontype=player_inventory[ player_inventory[0]][1] #type of current weapon
@@ -870,7 +912,8 @@ def update_expirience():
 def mazelevels_update(level):
 	global grid_x,grid_y,maze_randomcicles,objects_oxygen,objects_energy,objects_movingblock
 	global objects_enemy,enemy_maxlevel,objects_health,objects_hole,concentration_oxygen,objects_ammo
-	global objects_energy_gen,objects_heal_gen,objects_oxygen_gen
+	global objects_energy_gen,objects_heal_gen,objects_oxygen_gen,objects_food_gen
+	global concentration_food,slime_level
 	global START, EXIT
 	i=len(mazelevels) #длина массива уровней
 	if level>=i: level=i-1 #уровень не превышает последний
@@ -890,6 +933,9 @@ def mazelevels_update(level):
 	objects_energy_gen=mazelevels[level][12]
 	objects_heal_gen=mazelevels[level][13]
 	objects_oxygen_gen=mazelevels[level][14]
+	objects_food_gen=mazelevels[level][15]
+	concentration_food=mazelevels[level][16]
+	slime_level=mazelevels[level][17]
 	#лабиринты задают параметры при увеличении mazenumber
 	#grid_x,grid_y,maze_randomcicles,objects_oxygen,objects_energy,objects_movingblock,objects_enemy,maxlevel of enemy(?)
 	START=[]
@@ -923,7 +969,8 @@ def mazelevels_update(level):
 	print ('energy generators:'+str(objects_energy_gen))
 	print ('heal   generators:'+str(objects_heal_gen))
 	print ('oxygen generators:'+str(objects_oxygen_gen))
-
+	print ('food   generators:'+str(objects_food_gen))
+	print ('food concentration:'+str(concentration_food))
 
 #game over, wait 5 sec
 def gameover(text):
@@ -948,7 +995,7 @@ def startover():
 
 #initialize level
 def startlevel():
-	global maze, maze_objects, maze_oxygen, concentration_oxygen
+	global maze, maze_objects, maze_oxygen, maze_food, concentration_oxygen, concentration_food
 	#init:
 	mazelevels_update(mazenumber) #считывание глобальных параметров уровня
 	maze=startmaze() #generate maze
@@ -956,7 +1003,9 @@ def startlevel():
 	initplayer() #init to default player with upgrades and fog
 	maze_fog_update(player_x,player_y) #update fog at player position
 	maze_oxygen=start_env(concentration_oxygen) #generate oxygen
+	maze_food=start_env(concentration_food) #generate food
 	if objects_oxygen_gen>0: concentration_oxygen=objects_dict[52]['max'] #если на уровне есть генераторы кислорода, то концентрация не нулевая
+	if objects_food_gen>0:   concentration_food  =objects_dict[53]['max'] #если на уровне есть генераторы еды, то концентрация не нулевая
 	gameloop() #begin play game on level
 
 #load player from file in main menu, or from network
@@ -1255,6 +1304,7 @@ def bullets_fly(bullets):
 				enemy[enemy_index][11]=time.time() #time of killed
 				maze_objects[y][x]=0 #враг удаляется из предметов
 				player_action['KILL']+=1 #увеличиваем статистику убийств
+				if slime_level>0: slime_kill_enemy(x,y,enemy[enemy_index][5]) #generate food after kill if slime on level
 			bullets.pop(i)
 	#print(bullets)
 	return bullets
@@ -1276,6 +1326,40 @@ def objects_change(objects_on_level):
 				obj[1]=obj[1]+objects_dict[53]['cooldown']/cooldown['TICK']
 				if obj[1]>objects_dict[53]['max']:obj[1]=objects_dict[53]['max']
 	return objects_on_level
+
+#add food after in-place enemy kill
+def slime_kill_enemy(x,y,type):
+	global maze_food
+	add_food=enemy_type[type][6]*slimes[slime_level]['kill']
+	print('added food:'+str(add_food)+' at x:'+str(x)+' y:'+str(y))
+	maze_food[y][x]+=add_food
+
+#generate new slime in-place big concentration of food
+def slime_new_enemy():
+	global enemy, maze_objects, maze_food
+	random.seed()
+	count=len(enemy)
+	new=enemy_type[ slimes[slime_level]['level'] ] #slime
+	p=slimes[slime_level]['probability'] #probability
+	c=slimes[slime_level]['newenemy'] #concentration
+	for i in range(1,grid_x-1):
+		for j in range(1,grid_y-1):
+			if maze_food[j][i]>=c and maze_objects[j][i]==0 and maze[j][i]==0: #поле пустое, есть еда
+				if player_x!=i or player_y!=j: #в поле не находится игрок
+					generate=random.random()
+					if generate<p: #случайная генерация врага
+						#print(generate,p)
+						enemy.append([ i,j,new[2],0   ,new[4],new[5],new[6],new[7],False, 0        ,False,time.time() ])
+						#			   x y speed  act  state  type   heal   damage killed direction moved time
+						maze_food[j][i]-=c
+						maze_objects[j][i]=5
+	if count<len(enemy): print( 'new slimes:'+str(len(enemy)-count)+' enemies:'+str(len(enemy)) )
+
+def slime_regenerate_enemy():
+	pass
+
+def slime_split_enemy():
+	pass
 
 #import and create pictures:
 wall=pygame.image.load('wall15.png').convert()
@@ -1301,6 +1385,8 @@ enemyimg4 = pygame.image.load('enemy4.png').convert()
 zoomenemy4=[pygame.transform.smoothscale(enemyimg4,(size,size)) for size in zoomsize]
 enemyimg5 = pygame.image.load('enemy5.png').convert()
 zoomenemy5=[pygame.transform.smoothscale(enemyimg5,(size,size)) for size in zoomsize]
+enemyimg6 = pygame.image.load('enemy8.png').convert()
+zoomenemy6=[pygame.transform.scale(enemyimg6,(size,size)) for size in zoomsize]
 
 health = pygame.image.load('health1.png').convert()
 zoomhealth=[pygame.transform.scale(health,(size,size)) for size in zoomsize]
@@ -1320,6 +1406,8 @@ gen_heal_img   = pygame.image.load('generator2.png').convert()
 zoom_gen_heal  =[pygame.transform.scale(gen_heal_img  ,(size,size)) for size in zoomsize]
 gen_oxygen_img   = pygame.image.load('generator3.png').convert()
 zoom_gen_oxygen  =[pygame.transform.scale(gen_oxygen_img  ,(size,size)) for size in zoomsize]
+gen_food_img   = pygame.image.load('generator4.png').convert()
+zoom_gen_food  =[pygame.transform.scale(gen_food_img  ,(size,size)) for size in zoomsize]
 bloodimg   = pygame.image.load('blood.png').convert()
 zoomblood =[pygame.transform.scale(bloodimg,(size,size)) for size in zoomsize]
 offimg = pygame.image.load('off.png').convert()
@@ -1361,6 +1449,7 @@ for i in range(len(zoomsize)):
 	zoomenemy3[i].set_colorkey((0x000000))
 	zoomenemy4[i].set_colorkey((0x000000)) #black
 	zoomenemy5[i].set_colorkey((0x000000)) #black
+	zoomenemy6[i].set_colorkey((16777215)) #white
 	zoomhealth[i].set_colorkey((4147404))
 	zoomenergy[i].set_colorkey((15539236)) #red
 	zoomoxygen[i].set_colorkey((16777215)) #white
@@ -1370,6 +1459,7 @@ for i in range(len(zoomsize)):
 	zoom_gen_energy[i].set_colorkey((15539236)) #red
 	zoom_gen_heal[i].set_colorkey((15539236)) #red
 	zoom_gen_oxygen[i].set_colorkey((15539236)) #red
+	zoom_gen_food[i].set_colorkey((15539236)) #red
 	zoomblood[i].set_colorkey((16777215)) #white
 	zoomoff[i].set_colorkey((16777215)) #white
 	for j in range(2):
@@ -1423,7 +1513,7 @@ def gameloop():
 	global pausegame
 	global cellsize
 	global enemy
-	global env_speed, maze_oxygen
+	global env_speed, maze_oxygen, maze_food
 	global player_direction, player_last_move
 	global FLAG_SCANNER, FLAG_SOUNDON
 	global player_inventory
@@ -1479,6 +1569,7 @@ def gameloop():
 						enemy[enemy_index][11]=time.time() #time of killed
 						maze_objects[player_y][player_x+1]=0 #враг удаляется из предметов
 						player_action['KILL']+=1 #увеличиваем статистику убийств
+						if slime_level>0: slime_kill_enemy(player_x+1,player_y,enemy[enemy_index][5]) #generate food after kill if slime on level
 					#continue
 				elif player_x<grid_x-2: #справа есть 2 поля
 					if maze_objects[player_y][player_x+1]==4 and maze_objects[player_y][player_x+2]==0 and maze[player_y][player_x+2]==0: #справа move block и за ним нет предметов и пустое поле
@@ -1511,6 +1602,7 @@ def gameloop():
 						enemy[enemy_index][11]=time.time() #time of killed
 						maze_objects[player_y][player_x-1]=0 #враг удаляется из предметов
 						player_action['KILL']+=1 #увеличиваем статистику убийств
+						if slime_level>0: slime_kill_enemy(player_x-1,player_y,enemy[enemy_index][5]) #generate food after kill if slime on level
 					#continue
 				elif player_x>2:
 					if maze_objects[player_y][player_x-1]==4 and maze_objects[player_y][player_x-2]==0 and maze[player_y][player_x-2]==0:
@@ -1543,6 +1635,7 @@ def gameloop():
 						enemy[enemy_index][11]=time.time() #time of killed
 						maze_objects[player_y-1][player_x]=0 #враг удаляется из предметов
 						player_action['KILL']+=1 #увеличиваем статистику убийств
+						if slime_level>0: slime_kill_enemy(player_x,player_y-1,enemy[enemy_index][5]) #generate food after kill if slime on level
 					#continue
 				elif player_y>2:
 					if maze_objects[player_y-1][player_x]==4 and maze_objects[player_y-2][player_x]==0 and maze[player_y-2][player_x]==0:
@@ -1575,6 +1668,7 @@ def gameloop():
 						enemy[enemy_index][11]=time.time() #time of killed
 						maze_objects[player_y+1][player_x]=0 #враг удаляется из предметов
 						player_action['KILL']+=1 #увеличиваем статистику убийств
+						if slime_level>0: slime_kill_enemy(player_x,player_y+1,enemy[enemy_index][5]) #generate food after kill if slime on level
 					#continue
 				elif player_y<grid_y-2:
 					if maze_objects[player_y+1][player_x]==4 and maze_objects[player_y+2][player_x]==0 and maze[player_y+2][player_x]==0:
@@ -1853,14 +1947,25 @@ def gameloop():
 		#change environment (oxygen) with env_speed tick
 		#print(concentration_oxygen, env_speed['OXYGEN'][1])
 		if env_speed['OXYGEN'][1]<=0 and concentration_oxygen>0:
-			maze_oxygen=next_env(maze_oxygen)
+			maze_oxygen=next_env(maze_oxygen,'OXYGEN')
 			env_speed['OXYGEN'][1]=env_speed['OXYGEN'][0]
 			#for i in range(grid_y):
 			#	print (maze_oxygen[i])
 		env_speed['OXYGEN'][1]-=1
+		#change environment (food) with env_speed tick
+		if env_speed['FOOD'][1]<=0 and concentration_food>0:
+			maze_food=next_env(maze_food,'FOOD')
+			env_speed['FOOD'][1]=env_speed['FOOD'][0]
+		if slime_level>0:
+			slime_new_enemy()
+			slime_regenerate_enemy()
+			slime_split_enemy()
+		env_speed['FOOD'][1]-=1
+		
 
 		pygame.display.update()
 		
+
 		#timer test:
 		#print ('прошло времени за цикл не считая tick :',time.clock()-startcicle)
 

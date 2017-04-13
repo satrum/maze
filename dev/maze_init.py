@@ -61,7 +61,7 @@ objects_dict={
 50:{'name':'energy generator','objects_id':50,'max':50.0,'cooldown':1  ,'state':True},
 51:{'name':'health generator','objects_id':51,'max':50.0,'cooldown':1  ,'state':True},
 52:{'name':'oxygen generator','objects_id':52,'max':200.0,'cooldown':50,'state':True},
-53:{'name':'slime  generator','objects_id':53,'max':50.0 ,'cooldown':10,'state':True},
+53:{'name':'food   generator','objects_id':53,'max':100.0,'cooldown':50,'state':True},
 54:{'name':'water  generator','objects_id':54,'max':200.0,'cooldown':50,'state':True},
 #50-59 GENERATORS
 60:{'name':'small gun'       ,'objects_id':60,'type':0}, #weapons
@@ -103,19 +103,22 @@ enemy_type=[
 [0,0,5 ,0,3,4,2 ,10,False], #4 heal=2 damage=10 cooldown=5 state - affraid move zoomenemy2
 [0,0,20,0,2,5,4 ,10,False], #5 heal=4 damage=10 cooldown=20 state - agressive move zoomenemy3
 [0,0,15,0,2,6,50,10,False,'BIG DOG ROBOT'], #6 heal=50 damage=10 cooldown=20 state - agressive move zoomenemy5 BOSS for 7 level
-[0,0,30,0,2,7,6 ,15,False]  #7 heal=6 damage=15 cooldown=30 state - agressive move zoomenemy4
+[0,0,30,0,2,7,6 ,15,False], #7 heal=6 damage=15 cooldown=30 state - agressive move zoomenemy4
+[0,0,20,0,0,8,1 ,1 ,False,'slime 1'], #8 heal=1 damage=1 cooldown=10 state - random
+[0,0,10,0,2,9,2 ,2 ,False,'slime 2'], #9 heal=1 damage=1 cooldown=10 state - agressive
 ]
 #0 1 2s 3 4 5 6h 7d 8
 #0 - x
 #1 - y
 #2 - speed(10 act)
 #3 - act(счетчик хода)
-#4 - state(0 - случайное блуждание, 1 - от края до края, 2 - нападение, 3 - убегает, 4 - стоит)
+#4 - state(0 - случайное блуждание, 1 - от края до края, 2 - нападение, 3 - убегает, 4 - ?)
 #5 - type(тип врага)
 #6 - здоровье
 #7 - урон от столкновения
 #8 - killed (False, True)
 #9 - name of enemy type for 'BOSS'
+#
 # only in enemy list (init in startobjects()) :
 #9 - 0,1,2 or 3 move: enemy_move() - dirarray)
 #10 - FLAG enemy moved (False or True)
@@ -133,23 +136,23 @@ print ('enemies max level: '+str(enemy_maxlevel))
 #print (len(enemy))
 mazenumber=0 #count of maze generation
 mazelevels=[
-[21, 21, 30  ,0, 3 , 0   ,10  ,[0]      ,0 ,0  ,0 ,[0]    ,2 ,1 ,5], #0 easy test level, +energy
-[51, 45, 100 ,5 ,20, 0   ,10  ,[4]      ,0 ,0  ,0 ,[0]    ,0 ,0 ,0], #1 medium test level, +oxygen, affraid enemies
-[75, 45, 200 ,10,50, 0   ,20  ,[4]      ,0 ,0  ,0 ,[0]    ,0 ,0 ,0], #2 medium level, energy+oxygen, affraid enemies
-[75, 45, 100 ,10,50, 100 ,10  ,[0]      ,0 ,0  ,0 ,[2]    ,0 ,0 ,0], #3 moving blocks (сложный лабиринт)
-[75, 45, 200 ,10,50, 150 ,30  ,[0]      ,2 ,0  ,0 ,[2]    ,0 ,0 ,0], #4 enemie level 0
-[75, 45, 150 ,10,50, 300 ,60  ,[0]      ,8 ,0  ,0 ,[4]    ,0 ,0 ,0], #5 more enemie level 0
-[75, 75, 300 ,15,80, 200 ,90  ,[0,1]    ,8 ,0  ,0 ,[8]    ,0 ,0 ,0], #6 enemie level 1 75*75
-[75, 75, 200 ,15,80, 400 ,120 ,[0,1]    ,8 ,0  ,0 ,[12]   ,0 ,0 ,0], #7 more enemie level 1 75*75 + boss
-[101,101,500 ,0, 100,300 ,200 ,[0,1,2]  ,12,100,20,[16]   ,0 ,0 ,0], #8 big level enemie level 2 101*101 holes and env_oxygen
-[201,201,2000,40,400,2000,300 ,[0,1,2,3],20,0  ,0 ,[50]   ,0 ,0 ,0], #9 very big level enemie level 3 201*201 трудный лабиринт
-[201,201,9999,10,400,2000,1000,[0,1,2,3],10,100,20,[80]   ,0 ,0 ,0], #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
+[21, 21, 30  ,0, 3 , 0   ,0   ,[0]      ,0 ,0  ,0 ,[0]    ,2 ,1 ,1, 4, 50, 1], #0 easy test level, +energy
+[51, 45, 100 ,5 ,20, 0   ,10  ,[4]      ,0 ,0  ,0 ,[0]    ,0 ,0 ,0, 0,  0, 0], #1 medium test level, +oxygen, affraid enemies
+[75, 45, 200 ,10,50, 0   ,20  ,[4]      ,0 ,0  ,0 ,[0]    ,0 ,0 ,0, 0,  0, 0], #2 medium level, energy+oxygen, affraid enemies
+[75, 45, 100 ,10,50, 100 ,10  ,[0]      ,0 ,0  ,0 ,[2]    ,0 ,0 ,0, 0,  0, 0], #3 moving blocks (сложный лабиринт)
+[75, 45, 200 ,10,50, 150 ,30  ,[0]      ,2 ,0  ,0 ,[2]    ,0 ,0 ,0, 0,  0, 0], #4 enemie level 0
+[75, 45, 150 ,10,50, 300 ,60  ,[0]      ,8 ,0  ,0 ,[4]    ,0 ,0 ,0, 0,  0, 0], #5 more enemie level 0
+[75, 75, 300 ,15,80, 200 ,90  ,[0,1]    ,8 ,0  ,0 ,[8]    ,0 ,0 ,0, 0,  0, 0], #6 enemie level 1 75*75
+[75, 75, 200 ,15,80, 400 ,120 ,[0,1]    ,8 ,0  ,0 ,[12]   ,0 ,0 ,0, 0,  0, 0], #7 more enemie level 1 75*75 + boss
+[101,101,500 ,0, 100,300 ,200 ,[0,1,2]  ,12,100,20,[16]   ,0 ,0 ,0, 0,  0, 0], #8 big level enemie level 2 101*101 holes and env_oxygen
+[201,201,2000,40,400,2000,300 ,[0,1,2,3],20,0  ,0 ,[50]   ,0 ,0 ,0, 0,  0, 0], #9 very big level enemie level 3 201*201 трудный лабиринт
+[201,201,9999,10,400,2000,1000,[0,1,2,3],10,100,20,[80]   ,0 ,0 ,0, 0,  0, 0], #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
 # 10 - надо агрессию у врагов! патроны заканчиваются!
-[201,201,5000,0 ,200,3000,1000,[0,5,7]  ,30,0  ,0 ,[99,99],30,30,30] #11 пока тестируется. Цель - убить большое количество врагов.
+[201,201,5000,0 ,200,3000,1000,[0,5,7]  ,30,0  ,0 ,[99,99],30,30,30,0,  0, 0] #11 пока тестируется. Цель - убить большое количество врагов.
 # вылетает ошибка [Finished in 14.6s with exit code 3221225725] если делать 250 на 250
 # 11 - Надо новый элемент, например оружие и апргейды на него. Базы: Телепорт, генераторы кислорода и энергии. 
 ]
-#0   1   2    3  4   5    6    7         8  9   10 11      12 13 14
+#0   1   2    3  4   5    6    7         8  9   10 11      12 13 14 15  16 17
 print(mazelevels)
 #лабиринты задают параметры при увеличении mazenumber
 #0 - grid_x
@@ -167,10 +170,13 @@ print(mazelevels)
 #12 - special object: energy generators
 #13 - special object: health generators
 #14 - special object: oxygen generators
+#15 - special object: food   generators
+#16 - concentration_food
+#17 - slime_level (of slime_level>0: generate slimes[slime_level-1])
 #пока нет, но надо:  oxygen env flag on/off (просчитывать ли вообще кислород или он в нуле), oxygen generator, bullet(small gun)
 mazelevels_target=[
 #[0,1,21-1,21-2] 0 level START/EXIT test: [0,0,0   ,0   ]
-{'GOTO': [0,1,21-2,21-2]  ,'KILL': 5,   'PICK': [[70,5,True],[71,1,True],[71,5,False]] , 'BOSS':0, 'TEXT':'test level with energy and agressive enemies, kill 5 enemy!'}, #0
+{'GOTO': [0,1,21-2,21-2]  ,'KILL': 5,   'PICK': [[60,1,False]]             , 'BOSS':0, 'TEXT':'test level with energy and agressive enemies, kill 5 enemy!'}, #0
 {'GOTO': [0,1,51-2,45-2]  ,'KILL': 1,   'PICK': 0                          , 'BOSS':0, 'TEXT':'small level with oxygen, enemies are running away'}, #1
 {'GOTO': [0,1,0,0      ]  ,'KILL': 1,   'PICK': 0                          , 'BOSS':0, 'TEXT':'medium level with oxygen, enemies are running away, find EXIT'}, #2
 {'GOTO': [0,1,75-2,45-2]  ,'KILL': 0,   'PICK': [[60,1,True]]              , 'BOSS':0, 'TEXT':'complex medium level with moving blocks and agressive enemies and GUN'}, #3
@@ -194,7 +200,27 @@ mazelevels_target=[
 #среды:
 maze_oxygen=[[]] #кислород, концентрация
 concentration_oxygen=100 #максимальная концентрация, используется для генерации в start_env(concentration)
-env_speed={'OXYGEN':[100,0]} #шаги, через которые произойдет изменение концентрации и распространение среды в next_env(env_maze), первое значение - константа, второе - шаг
+env_speed={'OXYGEN':[100,0],'FOOD':[100,0]} #шаги, через которые произойдет изменение концентрации и распространение среды в next_env(env_maze), первое значение - константа, второе - шаг
+
+maze_food=[[]] #еда, концентрация
+concentration_food=100 #максимальная концентрация, используется для генерации в start_env(concentration)
+slimes=[
+{},
+{'level':8,'kill':10,'newenemy':50,'regenerate':10,'split':5, 'probability':0.1},
+{'level':9,'kill':10,'newenemy':60,'regenerate':10,'split':5, 'probability':0.2}
+]
+'''
+example: slime[0]
+after kill 0 level enemy (heal=5) add to food=5*10=50 ->generate 1 slime enemy level 8 (heal=1)
+after regenerate 4*10 enemy heal=1+4=5 -> split to 2 slime enemies
+all probability = 10% (0.1) - newenemy, regenerate,split
+'level':8, #level of slime enemy
+'kill':10, #killed enemy add to maze_food=health*slimes['kill'] (after kill enemy)
+'newenemy' :50, #concentration of maze_food for generate slime enemy
+'regenerate':10, #food for 1 health regen
+'split': #health of enemy to split enemy to 2 enemies after move
+'probability':0.1 #probability of generate and split at 'FOOD' cooldown
+'''
 
 #player:
 player_x=0
