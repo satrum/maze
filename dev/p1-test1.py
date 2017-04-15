@@ -1361,11 +1361,65 @@ def slime_new_enemy():
 						maze_objects[j][i]=5
 	if count<len(enemy): print( 'new slimes:'+str(len(enemy)-count)+' enemies:'+str(len(enemy)) )
 
+#increase health enemy after eat food
 def slime_regenerate_enemy():
-	pass
+	global enemy, maze_food
+	random.seed()
+	r=slimes[slime_level]['regenerate'] #slime regenerate
+	l=slimes[slime_level]['level'] #slime level
+	p=slimes[slime_level]['probability'] #probability
+	count=0
+	for i in enemy:
+		if i[8]==False and i[5]==l and maze_food[i[1]][i[0]]>r: #if not killed and slime unit and food>regenerate
+			generate=random.random()
+			if generate<p: #случайная генерация врага
+				maze_food[i[1]][i[0]]-=r
+				i[6]+=1
+				count+=1
+	#temporary print statistics:
+	if count>0: print('regenerate slime units:'+str(count))
+	h=[0 for i in range(40)]
+	for i in enemy: #calc stats in enemy - health
+		if i[8]==False:
+			h[i[6]]+=1
+	text='enemy heal:'
+	for i in range(40):
+		text+=' '+str(i)+':'+str(h[i])
+	print(text)
 
+#split enemy to 2 enemy in current and previous position, use enemy[9].
+#split worked if health > 'split'
 def slime_split_enemy():
-	pass
+	global enemy, maze_objects 
+	random.seed()
+	l=slimes[slime_level]['level'] #slime level
+	p=slimes[slime_level]['probability'] #probability
+	s=slimes[slime_level]['split'] #split health
+	new=enemy_type[l] #slime
+	dirarray={
+	0: [1 , 0, 'RIGHT'],
+	1: [-1, 0, 'LEFT' ],
+	2: [0 ,-1, 'UP'   ],
+	3: [0 , 1, 'DOWN' ],
+	4: [0 , 0, 'STAY AND FIRE']
+	}
+	count=0
+	for i in enemy:
+		if i[8]==False and i[5]==l and i[6]>=s: #if not killed and slime unit and enemy health>=split health
+			#calculate old position of enemy
+			old_x=i[0]-dirarray[ i[9] ][0]
+			old_y=i[1]-dirarray[ i[9] ][1]
+			if maze_objects[old_y][old_x]==0: #if old position clear
+				generate=random.random()
+				if generate<p: #случайная генерация врага
+					#new enemy generated
+					enemy.append([ old_x,old_y,new[2],0   ,new[4],new[5],new[6],new[7],False, 0        ,False,time.time() ])
+					#			   x     y     speed  act  state  type   heal   damage killed direction moved time
+					maze_objects[old_y][old_x]=5
+					i[6]-=new[6] #decrease current enemy health
+					count+=1
+	#temporary print statistics:
+	if count>0: print('splitted slime units:'+str(count))
 
 #import and create pictures:
 wall=pygame.image.load('wall15.png').convert()
@@ -1969,10 +2023,10 @@ def gameloop():
 			maze_food=next_env(maze_food,'FOOD')
 			print(time.time()-timer) #test time
 			env_speed['FOOD'][1]=env_speed['FOOD'][0]
-		if slime_level>0:
-			slime_new_enemy()
-			slime_regenerate_enemy()
-			slime_split_enemy()
+			if slime_level>0:
+				slime_new_enemy()
+				slime_regenerate_enemy()
+				slime_split_enemy()
 		env_speed['FOOD'][1]-=1
 		
 

@@ -91,7 +91,7 @@ pick_array=[]
 #На карте появляются враги(монстры), которые перемещаются, у них есть скорость, уровень агрессии, урон, здоровье.
 objects_enemy=50
 enemy_maxlevel=[0]
-enemy_blood_timer=60 #time in sec to see blood of killed enemies
+enemy_blood_timer=120 #time in sec to see blood of killed enemies
 #убрать генерацию в функцию startobjects()
 #enemy=[[] for i in range(objects_enemy)]
 enemy_type=[
@@ -104,7 +104,7 @@ enemy_type=[
 [0,0,20,0,2,5,4 ,10,False], #5 heal=4 damage=10 cooldown=20 state - agressive move zoomenemy3
 [0,0,15,0,2,6,50,10,False,'BIG DOG ROBOT'], #6 heal=50 damage=10 cooldown=20 state - agressive move zoomenemy5 BOSS for 7 level
 [0,0,30,0,2,7,6 ,15,False], #7 heal=6 damage=15 cooldown=30 state - agressive move zoomenemy4
-[0,0,20,0,0,8,2 ,2 ,False,'slime 1'], #8 heal=1 damage=1 cooldown=10 state - random
+[0,0,20,0,0,8,2 ,2 ,False,'slime 1'], #8 heal=1 damage=1 cooldown=10 state - agressive
 [0,0,10,0,2,9,3 ,5 ,False,'slime 2'], #9 heal=1 damage=1 cooldown=10 state - agressive
 ]
 #0 1 2s 3 4 5 6h 7d 8
@@ -120,7 +120,7 @@ enemy_type=[
 #9 - name of enemy type for 'BOSS'
 #
 # only in enemy list (init in startobjects()) :
-#9 - 0,1,2 or 3 move: enemy_move() - dirarray)
+#9 - 0,1,2 or 3 move: enemy_move() - dirarray) - direction
 #10 - FLAG enemy moved (False or True)
 #11 - time.time() - created or killed
 
@@ -143,14 +143,14 @@ mazelevels=[
 [75, 45, 200 ,10,50, 150 ,30  ,[0]      ,2 ,0  ,0 ,[2]    ,0 ,0 ,0, 0,  0, 0], #4 enemie level 0
 [75, 45, 150 ,10,50, 300 ,60  ,[0]      ,8 ,0  ,0 ,[4]    ,0 ,0 ,0, 0,  0, 0], #5 more enemie level 0
 [75, 75, 300 ,15,80, 200 ,90  ,[0,1]    ,8 ,0  ,0 ,[8]    ,0 ,0 ,0, 0,  0, 0], #6 enemie level 1 75*75
-[75, 75, 200 ,15,80, 400 ,120 ,[0,1]    ,8 ,0  ,0 ,[12]   ,0 ,0 ,0, 0,  0, 0], #7 more enemie level 1 75*75 + boss
+[75, 75, 200 ,15,80, 400 ,120 ,[0,1]    ,12,0  ,0 ,[16]   ,0 ,0 ,0, 0,  0, 0], #7(HARD) more enemie level 1 75*75 + boss
 [101,101,500 ,0, 100,300 ,200 ,[0,1,2]  ,12,100,20,[16]   ,0 ,0 ,0, 0,  0, 0], #8 big level enemie level 2 101*101 holes and env_oxygen
 [201,201,2000,40,400,2000,300 ,[0,1,2,3],20,0  ,0 ,[50]   ,0 ,0 ,0, 0,  0, 0], #9 very big level enemie level 3 201*201 трудный лабиринт
 [201,201,9999,10,400,2000,1000,[0,1,2,3],10,100,20,[80]   ,0 ,0 ,0, 0,  0, 0], #10 very big, more enemies, больше пустых мест, меньше аптечек, для стрельбы
 # 10 - надо агрессию у врагов! патроны заканчиваются!
 [201,201,5000,0 ,200,3000,1000,[0,5,7]  ,30,0  ,0 ,[99,99],30,30,30,0,  0, 0], #11 Цель - убить большое количество врагов. Миниган, генераторы
 # вылетает ошибка [Finished in 14.6s with exit code 3221225725] если делать 250 на 250
-[201,201,4000,0 ,0  ,4000,0   ,[0]      ,0 ,0  ,0 ,[50,50],80,20,40,10,20, 1] #12 Цель - slime1, других врагов нет. есть генераторы еды
+[101,101,1000,0 ,0  ,1000,0   ,[0]      ,0 ,0  ,0 ,[50,50],30,10,10,20, 0, 1] #12 Цель - slime1, других врагов нет. есть генераторы еды
 #12 - возможно стоит новый элемент, например телепорт 
 ] 
 #0   1   2    3  4   5    6    7         8  9   10 11      12 13 14 15  16 17
@@ -189,7 +189,7 @@ mazelevels_target=[
 {'GOTO': [0,1,201-2,201-2],'KILL': 0,   'PICK': [[70,5,True],[70,50,False]], 'BOSS':0, 'TEXT':'super level with 4 types of enemies, find CHIPS'}, #9
 {'GOTO': [0,1,201-2,201-2],'KILL': 100, 'PICK': 0                          , 'BOSS':0, 'TEXT':'open super level with 4 types of enemies and oxygen, kill 100 enemy!'}, #10
 {'GOTO': [0,1,201-2,201-2],'KILL': 500, 'PICK': [[61,1,True],[61,3,False]] , 'BOSS':0, 'TEXT':'super level with 3 types of agressive enemies and generators, find minigun, kill 500 enemy!'}, #11
-{'GOTO': [0,1,0,0]        ,'KILL': 300, 'PICK': 0                          , 'BOSS':0, 'TEXT':'super level with slime and food generators, kill 300, find EXIT'}  #12
+{'GOTO': [0,1,0,0]        ,'KILL': 300, 'PICK': [[70,5,True],[70,10,False]], 'BOSS':0, 'TEXT':'super level with slime and food generators, kill 300, find EXIT'}  #12
 ]
 #GOTO - start and level complete player position. If [0,0,*,*] or [*,*,0,0] - generate START or EXIT points random
 #!!! need 3D coordinates START_Z,EXIT_Z
@@ -208,8 +208,8 @@ maze_food=[[]] #еда, концентрация
 concentration_food=100 #максимальная концентрация, используется для генерации в start_env(concentration)
 slimes=[
 {},
-{'level':8,'kill':5 ,'newenemy':40,'regenerate':10,'split':10, 'probability':0.1,'exp':10}, #enemy health: 2 40(newenemy)/5(kill)/2=4 killed -> +1
-{'level':9,'kill':10,'newenemy':60,'regenerate':10,'split':10, 'probability':0.2,'exp':20}  #enemy health: 3 60/10/3=2 killed -> +1
+{'level':8,'kill':5 ,'newenemy':40,'regenerate':20,'split':4, 'probability':0.1,'exp':10}, #enemy health: 2 40(newenemy)/5(kill)/2=4 killed -> +1
+{'level':9,'kill':10,'newenemy':60,'regenerate':20,'split':6, 'probability':0.2,'exp':20}  #enemy health: 3 60/10/3=2 killed -> +1
 ]
 '''
 example: slime[0]
