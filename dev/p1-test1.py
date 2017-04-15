@@ -1168,7 +1168,7 @@ def helpscreen():
 			if event.type == pygame.QUIT:
 				pygame.quit()
 				quit()
-		display_button("Return",40,display_y-40,250,40,green,bright_green,main_menu)
+		display_button("Return",40,display_y+40,250,40,green,bright_green,main_menu)
 		pygame.display.update()
 		clock.tick(10)
 
