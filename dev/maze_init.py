@@ -95,17 +95,17 @@ enemy_blood_timer=120 #time in sec to see blood of killed enemies
 #убрать генерацию в функцию startobjects()
 #enemy=[[] for i in range(objects_enemy)]
 enemy_type=[
-[0,0,10,0,2,0,5 ,2 ,False], #0 heal=5 damage=2 cooldown=10 state - agressive zoomenemy1 
-[0,0,5 ,0,0,1,2 ,10,False], #1 heal=2 damage=10 cooldown=5 state - random move zoomenemy2 
-[0,0,20,0,0,2,4 ,10,False], #2 heal=4 damage=10 cooldown=20 state - random move zoomenemy3
-[0,0,30,0,0,3,6 ,15,False], #3 heal=6 damage=15 cooldown=30 state - random move zoomenemy4
+[0,0,10,0,2,0,5 ,2 ,False,''             ,100], #0 heal=5 damage=2 cooldown=10 state - agressive zoomenemy1 
+[0,0,5 ,0,0,1,2 ,10,False,''             ,50 ], #1 heal=2 damage=10 cooldown=5 state - random move zoomenemy2 
+[0,0,20,0,0,2,4 ,10,False,''             ,100], #2 heal=4 damage=10 cooldown=20 state - random move zoomenemy3
+[0,0,30,0,0,3,6 ,15,False,''             ,150], #3 heal=6 damage=15 cooldown=30 state - random move zoomenemy4
 
-[0,0,5 ,0,3,4,2 ,10,False], #4 heal=2 damage=10 cooldown=5 state - affraid move zoomenemy2
-[0,0,20,0,2,5,4 ,10,False], #5 heal=4 damage=10 cooldown=20 state - agressive move zoomenemy3
-[0,0,15,0,2,6,50,10,False,'BIG DOG ROBOT'], #6 heal=50 damage=10 cooldown=20 state - agressive move zoomenemy5 BOSS for 7 level
-[0,0,30,0,2,7,6 ,15,False], #7 heal=6 damage=15 cooldown=30 state - agressive move zoomenemy4
-[0,0,20,0,0,8,2 ,2 ,False,'slime 1'], #8 heal=1 damage=1 cooldown=10 state - agressive
-[0,0,10,0,2,9,3 ,5 ,False,'slime 2'], #9 heal=1 damage=1 cooldown=10 state - agressive
+[0,0,5 ,0,3,4,2 ,10,False,''             ,50 ], #4 heal=2 damage=10 cooldown=5 state - affraid move zoomenemy2
+[0,0,20,0,2,5,4 ,10,False,''             ,100], #5 heal=4 damage=10 cooldown=20 state - agressive move zoomenemy3
+[0,0,15,0,2,6,50,10,False,'BIG DOG ROBOT',1000], #6 heal=50 damage=10 cooldown=20 state - agressive move zoomenemy5 BOSS for 7 level
+[0,0,30,0,2,7,6 ,15,False,''             ,150], #7 heal=6 damage=15 cooldown=30 state - agressive move zoomenemy4
+[0,0,20,0,0,8,2 ,2 ,False,'slime 1'      ,10 ], #8 heal=1 damage=1 cooldown=10 state - agressive
+[0,0,10,0,2,9,3 ,5 ,False,'slime 2'      ,20 ], #9 heal=1 damage=1 cooldown=10 state - agressive
 ]
 #0 1 2s 3 4 5 6h 7d 8
 #0 - x
@@ -118,6 +118,7 @@ enemy_type=[
 #7 - урон от столкновения
 #8 - killed (False, True)
 #9 - name of enemy type for 'BOSS'
+#10 - exp for kill
 #
 # only in enemy list (init in startobjects()) :
 #9 - 0,1,2 or 3 move: enemy_move() - dirarray) - direction

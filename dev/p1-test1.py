@@ -748,7 +748,11 @@ def displayinfo():
 	stats=stats+' pick:'+str(player_action['PICK'])+' kill:'+str(player_action['KILL'])+' fire:'+str(player_action['FIRE'])+' hit:'+str(player_action['HIT'])
 	mytext = myfont.render(stats, True, black)
 	gameDisplay.blit(mytext,(10,display_y+80))
-	expirience=player_action['PICK']*100+player_action['FOG']+player_action['MOVE']+player_action['KILL']*100+int(player_oxygen)+int(player_energy)+int(player_heal)
+	kill_exp=0
+	for i in enemy:
+		if i[8]==True:
+			kill_exp+=enemy_type[ i[5] ][10]
+	expirience=player_action['PICK']*100+player_action['FOG']+player_action['MOVE']+kill_exp+int(player_oxygen)+int(player_energy)+int(player_heal)
 	mytext = myfont.render('exp after level complete: '+str(expirience),True,black)
 	gameDisplay.blit(mytext,(10,display_y+100))
 	mytext = myfont.render('time passed: '+str(int(time.clock()-starttime)),True,black)
@@ -910,7 +914,11 @@ def maze_fog_update(x,y):
 #update expirience after level complete
 def update_expirience():
 	global player_expirience
-	level_expirience=player_action['PICK']*100+player_action['FOG']+player_action['MOVE']+player_action['KILL']*100+int(player_oxygen)+int(player_energy)+int(player_heal)
+	kill_exp=0
+	for i in enemy:
+		if i[8]==True:
+			kill_exp+=enemy_type[ i[5] ][10]
+	level_expirience=player_action['PICK']*100+player_action['FOG']+player_action['MOVE']+kill_exp+int(player_oxygen)+int(player_energy)+int(player_heal)
 	timebonus=int((grid_x*grid_y)/(time.clock()-starttime))
 	player_expirience=player_expirience+level_expirience+timebonus
 
@@ -1302,7 +1310,11 @@ def bullets_fly(bullets):
 			print('bullet in enemy')
 			player_action['HIT']+=1
 			damage=bullets[i][9]
-			enemy_index=[enemy.index(j) for j in enemy if j[0]==x and j[1]==y and j[8]==False][0]#найти индекс врага
+			for j in enemy:
+				if j[0]==x and j[1]==y and j[8]==False:
+					enemy_index=enemy.index(j)
+					break
+			#enemy_index=[enemy.index(j) for j in enemy if j[0]==x and j[1]==y and j[8]==False][0]#найти индекс врага
 			enemy[enemy_index][6]=enemy[enemy_index][6]-damage #урон врагу пулей
 			if enemy[enemy_index][6]<=0: #проверка здоровья врага
 				print('enemy destroyed by fire')
@@ -1623,7 +1635,11 @@ def gameloop():
 					#continue
 				elif maze_objects[player_y][player_x+1]==5:#справа враг
 					act=['MOVE ON ENEMY',cooldown['MOVE ON ENEMY']-player_speed]
-					enemy_index=[enemy.index(i) for i in enemy if i[0]==player_x+1 and i[1]==player_y][0]#найти индекс врага
+					for i in enemy:#найти индекс врага
+						if i[0]==player_x+1 and i[1]==player_y and i[8]==False:
+							enemy_index=enemy.index(i)
+							break
+					#enemy_index=[enemy.index(i) for i in enemy if i[0]==player_x+1 and i[1]==player_y][0]
 					print('нападение на врага')
 					player_heal=player_heal-enemy[enemy_index][7] #урон от врага
 					enemy[enemy_index][6]=enemy[enemy_index][6]-player_damage #урон врагу
@@ -1656,7 +1672,11 @@ def gameloop():
 					#continue
 				elif maze_objects[player_y][player_x-1]==5:#справа враг
 					act=['MOVE ON ENEMY',cooldown['MOVE ON ENEMY']-player_speed]
-					enemy_index=[enemy.index(i) for i in enemy if i[0]==player_x-1 and i[1]==player_y][0]#найти врага
+					for i in enemy:#найти индекс врага
+						if i[0]==player_x-1 and i[1]==player_y and i[8]==False:
+							enemy_index=enemy.index(i)
+							break
+					#enemy_index=[enemy.index(i) for i in enemy if i[0]==player_x-1 and i[1]==player_y][0]#найти врага
 					print('нападение на врага')
 					player_heal=player_heal-enemy[enemy_index][7] #урон от врага
 					enemy[enemy_index][6]=enemy[enemy_index][6]-player_damage #урон врагу
@@ -1689,7 +1709,11 @@ def gameloop():
 					#continue
 				elif maze_objects[player_y-1][player_x]==5:#справа враг
 					act=['MOVE ON ENEMY',cooldown['MOVE ON ENEMY']-player_speed]
-					enemy_index=[enemy.index(i) for i in enemy if i[0]==player_x and i[1]==player_y-1][0]#найти врага
+					for i in enemy:#найти индекс врага
+						if i[0]==player_x and i[1]==player_y-1 and i[8]==False:
+							enemy_index=enemy.index(i)
+							break
+					#enemy_index=[enemy.index(i) for i in enemy if i[0]==player_x and i[1]==player_y-1][0]#найти врага
 					print('нападение на врага')
 					player_heal=player_heal-enemy[enemy_index][7] #урон от врага
 					enemy[enemy_index][6]=enemy[enemy_index][6]-player_damage #урон врагу
@@ -1722,7 +1746,11 @@ def gameloop():
 					#continue
 				elif maze_objects[player_y+1][player_x]==5:#справа враг
 					act=['MOVE ON ENEMY',cooldown['MOVE ON ENEMY']-player_speed]
-					enemy_index=[enemy.index(i) for i in enemy if i[0]==player_x and i[1]==player_y+1][0]#найти врага
+					for i in enemy:#найти индекс врага
+						if i[0]==player_x and i[1]==player_y+1 and i[8]==False:
+							enemy_index=enemy.index(i)
+							break
+					#enemy_index=[enemy.index(i) for i in enemy if i[0]==player_x and i[1]==player_y+1][0]#найти врага
 					print('нападение на врага')
 					player_heal=player_heal-enemy[enemy_index][7] #урон от врага
 					enemy[enemy_index][6]=enemy[enemy_index][6]-player_damage #урон врагу
