@@ -137,7 +137,7 @@ print ('enemies max level: '+str(enemy_maxlevel))
 #print (len(enemy))
 mazenumber=0 #count of maze generation
 mazelevels=[
-[21, 21, 30  ,0, 3 , 0   ,0   ,[0]      ,0 ,0  ,0 ,[0]    ,2 ,1 ,1, 4, 50, 1], #0 easy test level, +energy
+[21, 21, 30  ,0, 3 , 0   ,0   ,[0]      ,0 ,0  ,0 ,[0]    ,2 ,1 ,1, 4, 60, 1], #0 easy test level, +energy
 [51, 45, 100 ,5 ,20, 0   ,10  ,[4]      ,0 ,0  ,0 ,[0]    ,0 ,0 ,0, 0,  0, 0], #1 medium test level, +oxygen, affraid enemies
 [75, 45, 200 ,10,50, 0   ,20  ,[4]      ,0 ,0  ,0 ,[0]    ,0 ,0 ,0, 0,  0, 0], #2 medium level, energy+oxygen, affraid enemies
 [75, 45, 100 ,10,50, 100 ,10  ,[0]      ,0 ,0  ,0 ,[2]    ,0 ,0 ,0, 0,  0, 0], #3 moving blocks (сложный лабиринт)
@@ -209,8 +209,8 @@ maze_food=[[]] #еда, концентрация
 concentration_food=100 #максимальная концентрация, используется для генерации в start_env(concentration)
 slimes=[
 {},
-{'level':8,'kill':5 ,'newenemy':40,'regenerate':20,'split':4, 'probability':0.1,'exp':10}, #enemy health: 2 40(newenemy)/5(kill)/2=4 killed -> +1
-{'level':9,'kill':10,'newenemy':60,'regenerate':20,'split':6, 'probability':0.2,'exp':20}  #enemy health: 3 60/10/3=2 killed -> +1
+{'level':8,'kill':5 ,'newenemy':40,'regenerate':20,'split':4, 'probability':0.1,'exp':10,'near':True}, #enemy health: 2 40(newenemy)/5(kill)/2=4 killed -> +1
+{'level':9,'kill':10,'newenemy':60,'regenerate':20,'split':6, 'probability':0.2,'exp':20,'near':False}  #enemy health: 3 60/10/3=2 killed -> +1
 ]
 '''
 example: slime[0]
@@ -224,6 +224,7 @@ all probability = 10% (0.1) - newenemy, regenerate,split
 'split': #health of enemy to split enemy to 2 enemies after move
 'probability':0.1 #probability of generate and split at 'FOOD' cooldown
 'exp':10 #expirience for 1 kill slime unit
+'near':True newenemy generation worked if only near another slime unit
 '''
 
 #player:

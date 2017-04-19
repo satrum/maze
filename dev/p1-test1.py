@@ -1360,17 +1360,21 @@ def slime_new_enemy():
 	new=enemy_type[ slimes[slime_level]['level'] ] #slime
 	p=slimes[slime_level]['probability'] #probability
 	c=slimes[slime_level]['newenemy'] #concentration
+	near=slimes[slime_level]['near'] #near slime unit generation condition
 	for i in range(1,grid_x-1):
 		for j in range(1,grid_y-1):
 			if maze_food[j][i]>=c and maze_objects[j][i]==0 and maze[j][i]==0: #поле пустое, есть еда
 				if player_x!=i or player_y!=j: #в поле не находится игрок
-					generate=random.random()
-					if generate<p: #случайная генерация врага
-						#print(generate,p)
-						enemy.append([ i,j,new[2],0   ,new[4],new[5],new[6],new[7],False, 0        ,False,time.time() ])
-						#			   x y speed  act  state  type   heal   damage killed direction moved time
-						maze_food[j][i]-=c
-						maze_objects[j][i]=5
+					#if near is another enemy
+					obj=[5,53] #enemy or generator
+					if (maze_objects[j][i+1] in obj) or (maze_objects[j][i-1] in obj) or (maze_objects[j+1][i] in obj) or (maze_objects[j-1][i] in obj) or near==False:
+						generate=random.random()
+						if generate<p: #случайная генерация врага
+							#print(generate,p)
+							enemy.append([ i,j,new[2],0   ,new[4],new[5],new[6],new[7],False, 0        ,False,time.time() ])
+							#			   x y speed  act  state  type   heal   damage killed direction moved time
+							maze_food[j][i]-=c
+							maze_objects[j][i]=5
 	if count<len(enemy): print( 'new slimes:'+str(len(enemy)-count)+' enemies:'+str(len(enemy)) )
 
 #increase health enemy after eat food
