@@ -209,8 +209,8 @@ maze_food=[[]] #еда, концентрация
 concentration_food=100 #максимальная концентрация, используется для генерации в start_env(concentration)
 slimes=[
 {},
-{'level':8,'kill':5 ,'newenemy':40,'regenerate':20,'split':4, 'probability':0.1,'exp':10,'near':True}, #enemy health: 2 40(newenemy)/5(kill)/2=4 killed -> +1
-{'level':9,'kill':10,'newenemy':60,'regenerate':20,'split':6, 'probability':0.2,'exp':20,'near':False}  #enemy health: 3 60/10/3=2 killed -> +1
+{'level':8,'kill':5 ,'newenemy':40,'regenerate':20,'split':4, 'probability':0.1,'exp':10,'near':True,'maxhealth':6}, #enemy health: 2 40(newenemy)/5(kill)/2=4 killed -> +1
+{'level':9,'kill':10,'newenemy':60,'regenerate':20,'split':6, 'probability':0.2,'exp':20,'near':False,'maxhealth':9}  #enemy health: 3 60/10/3=2 killed -> +1
 ]
 '''
 example: slime[0]
@@ -225,6 +225,7 @@ all probability = 10% (0.1) - newenemy, regenerate,split
 'probability':0.1 #probability of generate and split at 'FOOD' cooldown
 'exp':10 #expirience for 1 kill slime unit
 'near':True newenemy generation worked if only near another slime unit
+'maxhealth': maximum health of slime unit
 '''
 
 #player:

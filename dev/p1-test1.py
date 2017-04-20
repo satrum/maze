@@ -1384,9 +1384,10 @@ def slime_regenerate_enemy():
 	r=slimes[slime_level]['regenerate'] #slime regenerate
 	l=slimes[slime_level]['level'] #slime level
 	p=slimes[slime_level]['probability'] #probability
+	mh=slimes[slime_level]['maxhealth'] #max health of slime unit
 	count=0
 	for i in enemy:
-		if i[8]==False and i[5]==l and maze_food[i[1]][i[0]]>r: #if not killed and slime unit and food>regenerate
+		if i[8]==False and i[5]==l and maze_food[i[1]][i[0]]>r and i[6]<mh: #if not killed and slime unit and food>regenerate
 			generate=random.random()
 			if generate<p: #случайная генерация врага
 				maze_food[i[1]][i[0]]-=r
