@@ -98,12 +98,12 @@ enemy_type=[
 [0,0,10,0,2,0,5 ,2 ,False,''             ,100], #0 heal=5 damage=2 cooldown=10 state - agressive zoomenemy1 
 [0,0,5 ,0,0,1,2 ,10,False,''             ,50 ], #1 heal=2 damage=10 cooldown=5 state - random move zoomenemy2 
 [0,0,20,0,0,2,4 ,10,False,''             ,100], #2 heal=4 damage=10 cooldown=20 state - random move zoomenemy3
-[0,0,30,0,0,3,6 ,15,False,''             ,150], #3 heal=6 damage=15 cooldown=30 state - random move zoomenemy4
+[0,0,30,0,0,3,6 ,15,False,'DOG'          ,150], #3 heal=6 damage=15 cooldown=30 state - random move zoomenemy4
 
 [0,0,5 ,0,3,4,2 ,10,False,''             ,50 ], #4 heal=2 damage=10 cooldown=5 state - affraid move zoomenemy2
 [0,0,20,0,2,5,4 ,10,False,''             ,100], #5 heal=4 damage=10 cooldown=20 state - agressive move zoomenemy3
 [0,0,15,0,2,6,50,10,False,'BIG DOG ROBOT',1000], #6 heal=50 damage=10 cooldown=20 state - agressive move zoomenemy5 BOSS for 7 level
-[0,0,30,0,2,7,6 ,15,False,''             ,150], #7 heal=6 damage=15 cooldown=30 state - agressive move zoomenemy4
+[0,0,30,0,2,7,6 ,15,False,'DOG'          ,150], #7 heal=6 damage=15 cooldown=30 state - agressive move zoomenemy4
 [0,0,20,0,0,8,2 ,2 ,False,'slime 1'      ,10 ], #8 heal=1 damage=1 cooldown=10 state - agressive
 [0,0,10,0,2,9,3 ,5 ,False,'slime 2'      ,20 ], #9 heal=1 damage=1 cooldown=10 state - agressive
 ]
@@ -151,8 +151,9 @@ mazelevels=[
 # 10 - надо агрессию у врагов! патроны заканчиваются!
 [201,201,5000,0 ,200,3000,1000,[0,5,7]  ,30,0  ,0 ,[99,99],30,30,30,0,  0, 0], #11 Цель - убить большое количество врагов. Миниган, генераторы
 # вылетает ошибка [Finished in 14.6s with exit code 3221225725] если делать 250 на 250
-[101,101,1000,0 ,0  ,1000,0   ,[0]      ,0 ,0  ,0 ,[50,50],30,10,10,20, 0, 1] #12 Цель - slime1, других врагов нет. есть генераторы еды
-#12 - возможно стоит новый элемент, например телепорт 
+[101,101,1000,0 ,0  ,1000,0   ,[0]      ,0 ,0  ,0 ,[30,30],30,10,10,20, 0, 1], #12 Цель - slime1, других врагов нет. есть генераторы еды
+[151,151,4000,0 ,0  ,4000,100 ,[7]      ,0 ,0  ,0 ,[40,40],60,20,20,10, 30,2]  #13 Цель - slime2, других врагов нет. есть генераторы еды b еда
+#12,13 - возможно стоит новый элемент, например телепорт 
 ] 
 #0   1   2    3  4   5    6    7         8  9   10 11      12 13 14 15  16 17
 print(mazelevels)
@@ -190,7 +191,8 @@ mazelevels_target=[
 {'GOTO': [0,1,201-2,201-2],'KILL': 0,   'PICK': [[70,5,True],[70,50,False]], 'BOSS':0, 'TEXT':'super level with 4 types of enemies, find CHIPS'}, #9
 {'GOTO': [0,1,201-2,201-2],'KILL': 100, 'PICK': 0                          , 'BOSS':0, 'TEXT':'open super level with 4 types of enemies and oxygen, kill 100 enemy!'}, #10
 {'GOTO': [0,1,201-2,201-2],'KILL': 500, 'PICK': [[61,1,True],[61,3,False]] , 'BOSS':0, 'TEXT':'super level with 3 types of agressive enemies and generators, find minigun, kill 500 enemy!'}, #11
-{'GOTO': [0,1,0,0]        ,'KILL': 300, 'PICK': [[70,5,True],[70,10,False]], 'BOSS':0, 'TEXT':'super level with slime and food generators, kill 300, find EXIT'}  #12
+{'GOTO': [0,1,0,0]        ,'KILL': 300, 'PICK': [[70,5,True],[70,10,False]], 'BOSS':0, 'TEXT':'very big level with slime and food generators, kill 300, find EXIT'}, #12
+{'GOTO': [0,0,0,0]        ,'KILL': 500, 'PICK': [[71,10,True],[71,30,False]],'BOSS':0, 'TEXT':'very big level with slime and food generators, kill 500, find EXIT'}  #13
 ]
 #GOTO - start and level complete player position. If [0,0,*,*] or [*,*,0,0] - generate START or EXIT points random
 #!!! need 3D coordinates START_Z,EXIT_Z
