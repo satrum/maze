@@ -675,10 +675,75 @@ db.mazes
 есть ограничения на размер find() и размер коллекции
 есть распределение нагрузки между серверами
 есть агрегирование и индексы для коллекций
+	mongoimport --drop -d m101 -c sysprofile sysprofile.json
+	mongo
+	$addToSet: db.zips.aggregate([{ "$group":{"_id":"$state", "cities":{$addToSet:"$city"}} }]) - добавить новый в array
+	$push: db.zips.aggregate([{ "$group":{"_id":"$state", "cities":{$push:"$city"}} }]) - добавить любой в array
+		result: 
+		{ "_id" : "POINT BAKER", "postal_codes" : [ "99927" ] }
+		{ "_id" : "KETCHIKAN", "postal_codes" : [ "99901", "99950" ] }
+	$max: db.zips.aggregate([{ "$group":{"_id":"$state", "pop":{$max:"$pop"}} }])
+	double group pipeline: db.zips.aggregate([
+		{"$group":{"_id":{state:"$state",city:"$city"}, "avg":{$avg:"$pop"}}}, 
+		{"$group":{"_id":"$_id.state", "avg":{$avg:"$avg"}}}])
+			result: { "_id" : "NH", "avg" : 4578.237735849057 }
+	$project: db.zips.aggregate([{$project:{ _id:0, city:{$toLower:"$city"}, pop:1, state:1, zip:"$_id" }}]) - reshape collection
+	$match: db.zips.aggregate([{ $match:{ pop:{$gt:100000} } }])
+	$skip, $limit: db.zips.aggregate([{$sort:{pop:-1}},{$limit:10},{$skip:1}])
+	$first,$last: db.zips.aggregate([{$sort:{state:1,pop:-1}}, {$group:{ _id:"$city", pop:{$first:"$pop"} }}])
+	$unwind - разложить array
+	$out - поместить в коллекцию, _id - должен быть уникальным
+	explain: db.zips.aggregate([{$group:{_id:"$state",pop:{$sum:"$pop"}} }],{explain:true})
+	
+	quiz1: db.posts.aggregate([{$unwind: "$comments"},{$group:{_id:"$comments.author",sum:{$sum:1}}},{$sort:{sum:-1}}])
+				{ "_id" : "Elizabet Kleine", "sum" : 503 }
+	quiz2: db.zips.aggregate({$match:{pop:{$gt:25000}, state:{$in:["CA","NY"]}}}, {$group: {_id:null,avg: {$avg:"$pop"} }})
+				{ "_id" : null, "avg" : 41485.69565217391 }
+	quiz3: db.grades.aggregate({$unwind:"$scores"},{$match:{"scores.type":{$in:["homework","exam"]}}}, {$group:{ _id:"$class_id", avg:{$avg:"$scores.score"} }}, {$sort:{avg:-1}})
+				{ "_id" : 1, "avg" : 64.8946239524274 }
+	quiz4: db.zips.aggregate({$project:{pop:1,first_char:{$substr:["$city",0,1]} }}, {$match:{first_char:{$in:["B","D","O","G","N","M"]} }}, {$group:{_id:null, allpop:{$sum:"$pop"}}})
+				{ "_id" : null, "allpop" : 76394871 }
+
+	exam:
+	1 (3 письма jeff.skilling@enron.com) - db.messages.aggregate([{ $match: { "headers.From" :{$eq:"andrew.fastow@enron.com"} } }, {$unwind:"$headers.To"}, {$project:{"headers.From":1,"headers.To":1} }])
+	2 db.messages.aggregate([{$project:{"headers.From":1,"headers.To":1}},{$unwind:"$headers.To"},{$group:{_id:{id:"$_id",from:"$headers.From"}, To:{$addToSet:"$headers.To"}}},{$unwind:"$To"}, {$group:{_id:{from:"$_id.from",to:"$To"} , count:{$sum:1} } },  { $sort: { count: -1 } }])
+		{ "_id" : { "from" : "susan.mara@enron.com", "to" : "jeff.dasovich@enron.com" }, "count" : 750 }
+	3 Your validation code is: vOnRg05kwcqyEFSve96R
+	4 Your validation code is 3f837hhg673ghd93hgf8
+	5 only c_1
+	6 remove index, set w=0,j=false on writes
+	7 after remove orphaned images: db.images.aggregate([{$unwind:"$tags"},{$group:{_id:"$tags",count:{$sum:1}}  }])
+		{ "_id" : "vacation", "count" : 44860 }
+		{ "_id" : "travel", "count" : 44824 }
+		{ "_id" : "kittens", "count" : 44822 }
+
 есть 2D индексы и 2Dsphere индексы - для объектов на площадки и на сфере (быстро находить ближайшие объекты)
 есть возможность загрузки больших файлов через GridFS, например
 есть возможность текстового поиска (text index)
 
+------------------------
+asyncio:
+https://github.com/MagicStack/uvloop - fast asyncio library on cpython
+https://docs.python.org/3/library/asyncio-stream.html#asyncio-tcp-echo-server-streams - asyncio 3.5 stream server (https://github.com/python/asyncio)
+
+задачи:
+ок 1 - async tcp echo server 
+ок 2 - async client
+разработать протокол обмена между клиентом и сервером
+тест - сервер считает тики по времени и выдает их клиентам по запросу
+в цикле сервера - обработка сетевых взаимодействий с клиентами, пересчет игры
+в цикле клиента - обработка сетевых взаимодействий с серверами, перехват ввода, отрисовка
+сервера - разные функции на разных портах (с помощью request получить текущий статус серверов и конфиг)
+
+протокол:
+1. Авторизация:
+client: {'name': 'ivan', 'pwd': 'ivanpwd'}
+server: {'result': 'new'}    'new','old',error'
+on server: list players=[{'name': 'roman', 'pwd': 'roman'}, {'name': 'kate', 'pwd': 'kate'}, {'name': 'ivan', 'pwd': 'ivan'}]
+
+2. Общий формат обмена данными:
+client: {'command':command,'data':data}
+server: {'result': result_data}
 ---------------------------
 git:
 https://github.com/satrum/maze.git
@@ -703,7 +768,7 @@ git - ветвление
 python - asyncio и multithread, декораторы, ооп
 ML - теория и реализация на python (tensorlow, keras,numpy,scipy)
 сетевые библиотеки
-веб-сервер
+веб-сервер - tornado, flask, django
 IDE pycharm
 
 
