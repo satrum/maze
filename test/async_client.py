@@ -1,4 +1,5 @@
 import asyncio
+import time
 #from base64 import b64decode
 
 port=7777
@@ -30,25 +31,33 @@ async def tcp_echo_client(message, port, loop=None):
 
 
 #run client
+#1. sign in/ sign up - take session digest
 while True:
-	name = input('Input you name: ')
-	pwd =  input('Input you password: ')
-	if name!='' and pwd!='': break
-	print('incorrect name or password')
-message_to_server={}
-message_to_server['name']=name
-message_to_server['pwd']=pwd
-'''
-print(message_to_server)
+	while True:
+		name = input('Input you name: ')
+		pwd =  input('Input you password: ')
+		if name!='' and pwd!='': break
+		print('incorrect name or password')
+	message_to_server={}
+	message_to_server['name']=name
+	message_to_server['pwd']=pwd
 
-encoded_message = str(message_to_server).encode()
-print(encoded_message)
+	result=run_in_foreground(tcp_echo_client(message_to_server, port))
+	print(type(result), result)
+	if result['result']!='error':
+		digest=result['digest']
+		print(digest)
+		break
 
-decoded_message = encoded_message.decode()
-print(decoded_message)
-'''
-result=run_in_foreground(tcp_echo_client(message_to_server, port))
-print(type(result), result)
+timer=time.time()
+while True:
+	message_to_server={'command':'tick','data':0,'digest':digest}
+	result=run_in_foreground(tcp_echo_client(message_to_server, port))
+	delta=result['result']-timer
+	timer=result['result']
+	print(timer,delta)
+	#print(type(result), result, 'tick:', result['result'])
+
 
 #print(run_in_foreground(tcp_echo_client('Hello World2!', port2)))
 
