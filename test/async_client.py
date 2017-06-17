@@ -29,6 +29,24 @@ async def tcp_echo_client(message, port, loop=None):
     writer.close()
     return eval(data)
 
+async def tcp_echo_client2(message, port, loop=None):
+    reader, writer = await asyncio.open_connection('127.0.0.1', port,
+                                                        loop=loop)
+    #newmessage=message+'port:'+str(port)
+    i=message['data']
+    while i>0:
+	    print('-> Client sending: %r' % message)
+	    writer.write(str(message).encode())
+	    writer.write_eof()
+	    data = (await reader.read()).decode()
+	    print('<- Client received: %r' % data)
+	    i-=1
+	    message['data']=i
+	    time.sleep(1)
+    print('-- Terminating connection on client')
+    writer.close()
+    return eval(data)
+
 
 #run client
 #1. sign in/ sign up - take session digest
@@ -51,7 +69,7 @@ while True:
 
 timer=time.time()
 while True:
-	message_to_server={'command':'tick','data':0,'digest':digest}
+	message_to_server={'command':'tick','data':10,'digest':digest}
 	result=run_in_foreground(tcp_echo_client(message_to_server, port))
 	delta=result['result']-timer
 	timer=result['result']
